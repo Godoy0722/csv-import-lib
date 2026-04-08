@@ -97,16 +97,16 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates the preprint cover image.
+     * Validates the publication cover image.
      *
      * @throws RowValidationException
      */
     public static function validateCoverImageIsValid(string $coverImageFilename, string $sourceDir): void
     {
         static::validatePathWithinSourceDir($coverImageFilename, $sourceDir);
-        $preprintCoverImagePath = "{$sourceDir}/{$coverImageFilename}";
+        $publicationCoverImagePath = "{$sourceDir}/{$coverImageFilename}";
 
-        if (!is_readable($preprintCoverImagePath)) {
+        if (!is_readable($publicationCoverImagePath)) {
             throw new RowValidationException(__('plugins.importexport.csv.invalidCoverImage'));
         }
 
@@ -118,11 +118,11 @@ class InvalidRowValidations
     }
 
     /**
-     * Perform all necessary validations for preprint galleys.
+     * Perform all necessary validations for publication galleys.
      *
      * @throws RowValidationException
      */
-    public static function validatePreprintGalleys(string $galleyFilenames, string $galleyLabels, string $sourceDir): void
+    public static function validatePublicationGalleys(string $galleyFilenames, string $galleyLabels, string $sourceDir): void
     {
         $galleyFilenamesArray = array_map('trim', explode(';', $galleyFilenames));
         $galleyLabelsArray = array_map('trim', explode(';', $galleyLabels));
@@ -187,19 +187,19 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates whether the server is valid for the CSV row.
+     * Validates whether the context is valid for the CSV row.
      *
      * @throws RowValidationException
      */
-    public static function validateContextIsValid(?Context $server, string $contextPath, string $contextMessage): void
+    public static function validateContextIsValid(?Context $context, string $contextPath, string $contextMessage): void
     {
-        if (!$server) {
+        if (!$context) {
             throw new RowValidationException(__('plugins.importexport.csv.unknownContext', ['context' => $contextMessage, 'contextPath' => $contextPath]));
         }
     }
 
     /**
-     * Validates if the server supports the locale provided in the CSV row.
+     * Validates if the context supports the locale provided in the CSV row.
      *
      * @throws RowValidationException
      */
@@ -266,7 +266,7 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates preprint versioning fields.
+     * Validates publication versioning fields.
      *
      * @throws RowValidationException
      */
@@ -284,7 +284,7 @@ class InvalidRowValidations
     }
 
      /**
-     * Validates that no duplicate version exists for the same preprint identifier,
+     * Validates that no duplicate version exists for the same publication identifier,
      * version, and locale combination in the current import session
      *
      * @throws RowValidationException
@@ -622,12 +622,12 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates the preprintViews field.
+     * Validates the publicationViews field.
      * Must be empty or a non-negative integer.
      *
      * @throws RowValidationException
      */
-    public static function validatePreprintViews(?string $submissionViews, string $fieldName): void
+    public static function validatePublicationViews(?string $submissionViews, string $fieldName): void
     {
         if (empty($submissionViews)) {
             return;

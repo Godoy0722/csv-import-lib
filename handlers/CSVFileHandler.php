@@ -11,7 +11,7 @@
  *
  * @ingroup plugins_importexport_csv
  *
- * @brief Handles the issue import when the user uses the issue command
+ * @brief Handles the Publication imports
  */
 
 namespace APP\plugins\importexport\csv\shared\handlers;
