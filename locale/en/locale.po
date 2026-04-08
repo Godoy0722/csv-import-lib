@@ -11,5 +11,113 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "plugins.importexport.csv.invalidSourceDir"
+msgstr "The source directory is invalid or does not exist."
+
+msgid "plugins.importexport.csv.filePathEscapesSourceDir"
+msgstr "File path \"{$filename}\" escapes the source directory. Filenames must not contain path traversal sequences."
+
 msgid "plugin.importexport.csv.shared.erroWhileSavingCoverImage"
 msgstr "An error occurred while copying the cover image."
+
+msgid "plugins.importexport.csv.rowDoesntContainAllFields"
+msgstr "Row doesn't contain all fields."
+
+msgid "plugins.importexport.csv.rowContainsTooManyFields"
+msgstr "Row contains more fields than expected."
+
+msgid "plugins.importexport.csv.verifyRequiredFieldsForThisRow"
+msgstr "Verify the required fields for this row."
+
+msgid "plugins.importexport.csv.invalidCoverImage"
+msgstr "The cover image has an invalid format for this row."
+
+msgid "plugins.importexport.csv.invalidFileExtension"
+msgstr "The cover image has an invalid extension."
+
+msgid "plugins.importexport.csv.invalidNumberOfLabelsAndGalleys"
+msgstr "Galley files don't have the same amount as the labels. Please verify it for this row."
+
+msgid "plugins.importexport.csv.invalidGalleyFile"
+msgstr "Invalid galley file \"{$filename}\" for this submission."
+
+msgid "plugins.importexport.csv.invalidNumberOfLabelsAndSupplementaryFiles"
+msgstr "Supplementary files don't have the same amount as the labels. Please verify it for this row."
+
+msgid "plugins.importexport.csv.invalidSupplementaryFile"
+msgstr "Invalid supplementary file \"{$filename}\" for this submission."
+
+msgid "plugins.importexport.csv.invalidNumberOfDescriptionsAndSupplementaryFiles"
+msgstr "Supplementary files don't have the same amount as the descriptions. Please verify it for this row."
+
+msgid "plugins.importexport.csv.unknownContext"
+msgstr "Unknown {$context} with path \"{$contextPath}\"."
+
+msgid "plugins.importexport.csv.unknownLocale"
+msgstr "Unknown locale or locale not supported by this {$context}: \"{$locale}\". Supported locales: {$supportedLocales}"
+
+msgid "plugins.importexport.csv.noGenre"
+msgstr "There is no {$genreName} genre."
+
+msgid "plugins.importexport.csv.noAuthorGroup"
+msgstr "There is no default author group in the {$context} {$contextPath}."
+
+msgid "plugins.importexport.csv.roleDoesntExist"
+msgstr "Role \"{$role}\" doesn't exist."
+
+msgid "plugins.importexport.csv.versionRequiredWhenIdentifierProvided"
+msgstr "Version is required when versionIdentifier is provided."
+
+msgid "plugins.importexport.csv.versionMustBePositiveInteger"
+msgstr "Version must be a positive integer greater than 0."
+
+msgid "plugins.importexport.csv.duplicatePublicationVersionLocaleFound"
+msgstr "A row with identifier \"{$identifier}\", version \"{$version}\", and locale \"{$locale}\" already exists in this import. Please check the row's version and locale combination."
+
+msgid "plugins.importexport.csv.invalidReferencesFile"
+msgstr "Invalid references file: \"{$filename}\". Please verify the file exists and is readable."
+
+msgid "plugins.importexport.csv.invalidReferencesFileExtension"
+msgstr "References file must have a .txt extension."
+
+msgid "plugins.importexport.csv.invalidOrcidFormat"
+msgstr "Invalid ORCID format: \"{$orcid}\". Accepted formats: URL (https://orcid.org/0000-0000-0000-0000), dashed (0000-0000-0000-0000), or numeric (0000000000000000)."
+
+msgid "plugins.importexport.csv.invalidVorDoiFormat"
+msgstr "Invalid VOR DOI format: \"{$vorDoi}\". Accepted formats: DOI URL (https://doi.org/10.1234/example), DOI identifier (10.1234/example), or with prefix (doi:10.1234/example)."
+
+msgid "plugins.importexport.csv.invalidFunderFormat"
+msgstr "Invalid funder format at position {$index}. Each funder must have at least a name."
+
+msgid "plugins.importexport.csv.fundingPluginNotEnabled"
+msgstr "The Funding plugin is not installed or not enabled for this {$context}. Please enable it before importing rows with funders data."
+
+msgid "plugins.importexport.csv.funderNotInCrossrefRegistry"
+msgstr "Funder \"{$funderName}\" at position {$index} is not from the Crossref Funder Registry. The funder identification must be a valid Crossref DOI (e.g., http://dx.doi.org/10.13039/...)."
+
+msgid "plugins.importexport.csv.funderMissingCrossrefId"
+msgstr "Funder \"{$funderName}\" at position {$index} is missing a Crossref Funder Registry identification. Please provide a valid Crossref DOI (e.g., http://dx.doi.org/10.13039/...)."
+
+msgid "plugins.importexport.csv.userAlreadyExistsWithUsername"
+msgstr "User already exists with username \"{$username}\"."
+
+msgid "plugins.importexport.csv.userAlreadyExistsWithEmail"
+msgstr "User already exists with email \"{$email}\"."
+
+msgid "plugins.importexport.csv.errorWhileCreatingPublication"
+msgstr "Error while creating publication."
+
+msgid "plugins.importexport.csv.invalidSubmissionViews"
+msgstr "The {$fieldName} field must be empty or a non-negative integer."
+
+msgid "plugins.importexport.csv.galleyViewsWithoutGalleys"
+msgstr "galleyViews is provided but galleyLabels is empty. Galley labels are required when galley views are specified."
+
+msgid "plugins.importexport.csv.invalidNumberOfGalleyViews"
+msgstr "The number of galleyViews values doesn't match the number of galleyLabels. Please verify the semicolon-separated counts match."
+
+msgid "plugins.importexport.csv.invalidGalleyViewValue"
+msgstr "Invalid galley view value \"{$value}\". Each galley view must be empty or a non-negative integer."
+
+msgid "plugins.importexport.csv.incompleteSectionFields"
+msgstr "Both sectionTitle and sectionAbbrev must be provided together. If one is filled, the other must also be filled."
