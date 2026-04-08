@@ -24,9 +24,9 @@ use PKP\statistics\PKPStatisticsHelper;
 class StatisticsProcessor
 {
     /**
-     * Insert preprint abstract views into the metrics_submission table.
+     * Insert submission abstract views into the metrics_submission table.
      */
-    public static function insertPreprintViews(int $submissionId, int $contextId, int $metric): void
+    public static function insertSubmissionViews(int $submissionId, int $contextId, int $metric): void
     {
         $date = Core::getCurrentDate();
 

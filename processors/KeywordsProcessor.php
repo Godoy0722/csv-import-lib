@@ -26,7 +26,6 @@ class KeywordsProcessor
         if (empty($data->keywords) && !is_null($basePublication)) {
             $baseKeywords = $basePublication->getData('keywords', $data->locale);
 
-            // Filter out null/empty values
             if (is_array($baseKeywords)) {
                 $baseKeywords = array_filter($baseKeywords, fn($keyword) => !is_null($keyword) && $keyword !== '');
             }
@@ -35,7 +34,6 @@ class KeywordsProcessor
                 return;
             }
 
-            // Wrap in locale array to match expected structure
             Repo::publication()->edit($publication, ['keywords' => [$data->locale => array_values($baseKeywords)]]);
             return;
         }

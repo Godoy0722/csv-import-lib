@@ -18,8 +18,8 @@ namespace APP\plugins\importexport\csv\shared\processors;
 
 use APP\facades\Repo;
 use APP\publication\Publication;
-use APP\server\Server;
 use APP\submission\Submission;
+use PKP\context\Context;
 use PKP\user\User;
 
 class AuthorsProcessor
@@ -71,11 +71,11 @@ class AuthorsProcessor
         User $user,
         Submission $submission,
         Publication $publication,
-        Server $server,
+        Context $context,
         int $userGroupId
     ): int
     {
-        $author = Repo::author()->newAuthorFromUser($user, $submission, $server);
+        $author = Repo::author()->newAuthorFromUser($user, $submission, $context);
         $author->setData('publicationId', $publication->getId());
         $author->setUserGroupId($userGroupId);
         $author->setSubmissionId($submission->getId());

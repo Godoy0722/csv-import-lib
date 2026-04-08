@@ -134,7 +134,7 @@ class PublicationProcessor
         $coverImageSaved = $fileManager->copyFile($srcFilePath, $destFilePath);
 
         if (!$coverImageSaved) {
-            throw new Exception(__('plugin.importexport.csv.erroWhileSavingBookCoverImage'));
+            throw new Exception(__('plugin.importexport.csv.shared.erroWhileSavingCoverImage'));
         }
 
         return $coverImageUploadName;
