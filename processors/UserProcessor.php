@@ -16,7 +16,7 @@
 namespace APP\plugins\importexport\csv\shared\processors;
 
 use APP\facades\Repo;
-use APP\plugins\importexport\csv\classes\cachedAttributes\CachedEntities;
+use APP\plugins\importexport\csv\shared\cachedAttributes\CachedEntities;
 use APP\plugins\importexport\csv\classes\validations\InvalidRowValidations;
 use PKP\core\Core;
 use PKP\security\Validation;

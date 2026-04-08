@@ -17,7 +17,7 @@
 namespace APP\plugins\importexport\csv\shared\processors;
 
 use APP\facades\Repo;
-use APP\plugins\importexport\csv\classes\cachedAttributes\CachedEntities;
+use APP\plugins\importexport\csv\shared\cachedAttributes\CachedEntities;
 
 class UserGroupsProcessor
 {
