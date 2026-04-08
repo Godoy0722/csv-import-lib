@@ -18,7 +18,7 @@
 namespace APP\plugins\importexport\csv\shared\processors;
 
 use APP\facades\Repo;
-use APP\plugins\importexport\csv\classes\validations\InvalidRowValidations;
+use APP\plugins\importexport\csv\shared\validations\InvalidRowValidations;
 use APP\publication\Publication;
 use APP\submission\Submission;
 use APP\file\PublicFileManager;

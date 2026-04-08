@@ -121,3 +121,33 @@ msgstr "Invalid galley view value \"{$value}\". Each galley view must be empty o
 
 msgid "plugins.importexport.csv.incompleteSectionFields"
 msgstr "Both sectionTitle and sectionAbbrev must be provided together. If one is filled, the other must also be filled."
+
+msgid "plugins.importexport.csv.couldNotOpenFile"
+msgstr "Could not read file: \"{$filePath}\". Error: \"{$errorMessage}\"."
+
+msgid "plugins.importexport.csv.dryModeFileHeader"
+msgstr "=== {$filename} ==="
+
+msgid "plugins.importexport.csv.dryModeTableHeader"
+msgstr "ROW  | STATUS | ERROR"
+
+msgid "plugins.importexport.csv.dryModeFailedRow"
+msgstr "{$row}  | FAILED | {$reason}"
+
+msgid "plugins.importexport.csv.dryModeFileSummary"
+msgstr "Result: {$passed} passed, {$failed} failed ({$total} total)"
+
+msgid "plugins.importexport.csv.dryModeGrandTotal"
+msgstr "--- Dry-mode complete: {$files} files, {$passed} passed, {$failed} failed ---"
+
+msgid "plugins.importexport.csv.zipCorruptArchive"
+msgstr "Cannot open ZIP archive: \"{$path}\"."
+
+msgid "plugins.importexport.csv.zipBombDetected"
+msgstr "ZIP archive rejected: uncompressed size ({$actual}) exceeds the allowed limit ({$limit})."
+
+msgid "plugins.importexport.csv.zipPathTraversal"
+msgstr "ZIP archive rejected: entry \"{$entry}\" contains a path traversal sequence."
+
+msgid "plugins.importexport.csv.importLocked"
+msgstr "An import is currently in progress. Please wait for it to complete before starting another."
