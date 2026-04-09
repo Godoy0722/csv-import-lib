@@ -192,7 +192,7 @@ class AuthorsProcessorTest extends BaseTestCase
 
     public function testAuthorDataFromCsvBuilder(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withAuthors('John,Doe,john@example.com,0000-0002-1825-0097,MIT')
             ->withLocale('en')
             ->buildObject();
@@ -203,7 +203,7 @@ class AuthorsProcessorTest extends BaseTestCase
 
     public function testMultipleAuthorsFromCsvBuilder(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withAuthors('John,Doe,john@example.com,,MIT;Jane,Smith,jane@example.com,,Harvard')
             ->buildObject();
 

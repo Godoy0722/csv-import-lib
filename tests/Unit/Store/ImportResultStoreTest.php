@@ -42,7 +42,7 @@ class ImportResultStoreTest extends BaseTestCase
         $uuid = 'test-uuid-123';
         $data = [
             'status' => 'success',
-            'importType' => 'preprints',
+            'importType' => 'submissions',
             'rowsProcessed' => 10,
             'rowsFailed' => 2,
             'capturedOutput' => 'Done.',
@@ -54,7 +54,7 @@ class ImportResultStoreTest extends BaseTestCase
 
         $this->assertNotNull($retrieved);
         $this->assertEquals('success', $retrieved['status']);
-        $this->assertEquals('preprints', $retrieved['importType']);
+        $this->assertEquals('submissions', $retrieved['importType']);
         $this->assertEquals(10, $retrieved['rowsProcessed']);
         $this->assertEquals(2, $retrieved['rowsFailed']);
         $this->assertEquals('Done.', $retrieved['capturedOutput']);
@@ -77,7 +77,7 @@ class ImportResultStoreTest extends BaseTestCase
         $uuid = 'test-uuid-456';
         $data = [
             'status' => 'success',
-            'importType' => 'preprints',
+            'importType' => 'submissions',
             'rowsProcessed' => 5,
             'rowsFailed' => 0,
             'capturedOutput' => 'Success.',
@@ -102,7 +102,7 @@ class ImportResultStoreTest extends BaseTestCase
         // Save first version
         $data1 = [
             'status' => 'pending',
-            'importType' => 'preprints',
+            'importType' => 'submissions',
             'rowsProcessed' => 0,
             'rowsFailed' => 0,
             'capturedOutput' => 'Starting...',
@@ -118,7 +118,7 @@ class ImportResultStoreTest extends BaseTestCase
         // Save second version with same UUID
         $data2 = [
             'status' => 'success',
-            'importType' => 'preprints',
+            'importType' => 'submissions',
             'rowsProcessed' => 10,
             'rowsFailed' => 0,
             'capturedOutput' => 'Complete.',

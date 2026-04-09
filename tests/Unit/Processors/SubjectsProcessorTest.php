@@ -66,7 +66,7 @@ class SubjectsProcessorTest extends BaseTestCase
 
     public function testSubjectsFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withSubjects('Computer Science;Software Engineering')
             ->buildObject();
 
@@ -75,7 +75,7 @@ class SubjectsProcessorTest extends BaseTestCase
 
     public function testEmptySubjectsFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withSubjects('')
             ->buildObject();
 

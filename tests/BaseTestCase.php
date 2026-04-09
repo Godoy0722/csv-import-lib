@@ -17,11 +17,11 @@ namespace APP\plugins\importexport\csv\shared\tests;
 use APP\author\Author;
 use APP\publication\Publication;
 use APP\section\Section;
-use APP\server\Server;
 use APP\submission\Submission;
 use Mockery;
 use Mockery\MockInterface;
 use PHPUnit\Framework\MockObject\MockObject;
+use PKP\context\Context;
 use PKP\affiliation\Affiliation;
 use PKP\affiliation\Repository as AffiliationRepository;
 use PKP\author\DAO as AuthorDAO;
@@ -383,26 +383,25 @@ abstract class BaseTestCase extends PKPTestCase
         return $user;
     }
 
-    protected function createMockServer(array $data = []): Server|MockObject
+    protected function createMockContext(array $data = []): MockInterface
     {
-        /** @var Server|MockObject */
-        $server = $this->getMockBuilder(Server::class)
-            ->onlyMethods(['getSupportedSubmissionLocales', 'getPrimaryLocale', 'getContactEmail'])
-            ->getMock();
+        $context = Mockery::mock(Context::class)->makePartial();
 
-        $server->setId($data['id'] ?? 1);
-        $server->setPath($data['path'] ?? 'testserver');
-        $server->setName($data['name'] ?? 'Test Server', $data['locale'] ?? 'en');
+        $context->shouldReceive('getId')->andReturn($data['id'] ?? 1);
+        $context->shouldReceive('getSupportedSubmissionLocales')
+            ->andReturn($data['supportedLocales'] ?? ['en']);
+        $context->shouldReceive('getPrimaryLocale')
+            ->andReturn($data['primaryLocale'] ?? 'en');
+        $context->shouldReceive('getContactEmail')
+            ->andReturn($data['contactEmail'] ?? 'contact@example.com');
+        $context->shouldReceive('getData')
+            ->with('contactEmail')
+            ->andReturn($data['contactEmail'] ?? 'contact@example.com');
+        $context->shouldReceive('getData')
+            ->with('contactName')
+            ->andReturn($data['contactName'] ?? 'Test Admin');
 
-        $supportedLocales = $data['supportedLocales'] ?? ['en'];
-        $primaryLocale = $data['primaryLocale'] ?? 'en';
-        $contactEmail = $data['contactEmail'] ?? 'contact@example.com';
-
-        $server->method('getSupportedSubmissionLocales')->willReturn($supportedLocales);
-        $server->method('getPrimaryLocale')->willReturn($primaryLocale);
-        $server->method('getContactEmail')->willReturn($contactEmail);
-
-        return $server;
+        return $context;
     }
 
     protected function createMockPublication(array $data = []): Publication
@@ -587,17 +586,17 @@ abstract class BaseTestCase extends PKPTestCase
 
     // ==================== Data Object Helpers ====================
 
-    protected function createPreprintDataObject(array $data): object
+    protected function createSubmissionDataObject(array $data): object
     {
         return (object) array_merge([
-            'serverPath' => 'testserver',
+            'contextPath' => 'testcontext',
             'locale' => 'en',
             'versionIdentifier' => '',
             'version' => '',
-            'preprintPrefix' => '',
-            'preprintTitle' => 'Test Preprint',
-            'preprintSubtitle' => '',
-            'preprintAbstract' => 'Test abstract',
+            'prefix' => '',
+            'title' => 'Test Submission',
+            'subtitle' => '',
+            'abstract' => 'Test abstract',
             'authors' => 'John,Doe,john@example.com,,Test University',
             'keywords' => '',
             'subjects' => '',
@@ -611,9 +610,9 @@ abstract class BaseTestCase extends PKPTestCase
             'suppFilenames' => '',
             'suppLabels' => '',
             'suppDescriptions' => '',
-            'sectionTitle' => 'Preprints',
-            'sectionAbbrev' => 'PRE',
-            'datePosted' => '2024-01-15',
+            'sectionTitle' => 'Articles',
+            'sectionAbbrev' => 'ART',
+            'datePublished' => '2024-01-15',
             'dateSubmitted' => '',
             'copyrightYear' => '',
             'copyrightHolder' => '',
@@ -629,7 +628,7 @@ abstract class BaseTestCase extends PKPTestCase
     protected function createUserDataObject(array $data): object
     {
         return (object) array_merge([
-            'serverPath' => 'testserver',
+            'contextPath' => 'testcontext',
             'firstname' => 'John',
             'lastname' => 'Doe',
             'email' => 'john@example.com',

@@ -103,7 +103,7 @@ class GalleyProcessorTest extends BaseTestCase
 
     public function testGalleysFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withGalleys('paper.pdf', 'PDF')
             ->buildObject();
 
@@ -113,7 +113,7 @@ class GalleyProcessorTest extends BaseTestCase
 
     public function testEmptyGalleys(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withGalleys('', '')
             ->buildObject();
 
@@ -160,7 +160,7 @@ class GalleyProcessorTest extends BaseTestCase
 
     public function testGalleyDoiFromData(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withDoi('10.1234/test-doi')
             ->buildObject();
 
@@ -169,7 +169,7 @@ class GalleyProcessorTest extends BaseTestCase
 
     public function testEmptyGalleyDoi(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withDoi('')
             ->buildObject();
 

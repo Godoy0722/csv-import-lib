@@ -67,7 +67,7 @@ class KeywordsProcessorTest extends BaseTestCase
 
     public function testKeywordsFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withKeywords('test;unit testing;php')
             ->buildObject();
 
@@ -76,7 +76,7 @@ class KeywordsProcessorTest extends BaseTestCase
 
     public function testEmptyKeywordsFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withKeywords('')
             ->buildObject();
 

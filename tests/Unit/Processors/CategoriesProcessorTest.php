@@ -86,7 +86,7 @@ class CategoriesProcessorTest extends BaseTestCase
 
     public function testCategoriesFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withCategories('Research Article;Review')
             ->buildObject();
 
@@ -95,7 +95,7 @@ class CategoriesProcessorTest extends BaseTestCase
 
     public function testEmptyCategoriesFromDataObject(): void
     {
-        $data = CsvTestDataBuilder::preprint()
+        $data = CsvTestDataBuilder::submission()
             ->withCategories('')
             ->buildObject();
 

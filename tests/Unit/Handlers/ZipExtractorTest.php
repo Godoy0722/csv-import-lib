@@ -69,14 +69,14 @@ class ZipExtractorTest extends BaseTestCase
     public function testExtractFlatZipReturnsDirWithCsvFiles(): void
     {
         $zipPath = $this->createZipWithFiles([
-            'preprints.csv' => "title,author\nTest,Author",
+            'submissions.csv' => "title,author\nTest,Author",
             'users.csv'     => "email,name\ntest@example.com,Test",
         ]);
 
         $extractDir = $this->extractor->extract($zipPath, $this->tempDir);
 
         $this->assertDirectoryExists($extractDir);
-        $this->assertFileExists($extractDir . '/preprints.csv');
+        $this->assertFileExists($extractDir . '/submissions.csv');
         $this->assertFileExists($extractDir . '/users.csv');
 
         $this->cleanupTempDirectory($extractDir);
@@ -85,14 +85,14 @@ class ZipExtractorTest extends BaseTestCase
     public function testExtractNestedZipReturnsDirWithCsvFiles(): void
     {
         $zipPath = $this->createZipWithFiles([
-            'import/preprints.csv' => "title,author\nTest,Author",
+            'import/submissions.csv' => "title,author\nTest,Author",
             'import/users.csv'     => "email,name\ntest@example.com,Test",
         ]);
 
         $extractDir = $this->extractor->extract($zipPath, $this->tempDir);
 
         $this->assertDirectoryExists($extractDir);
-        $this->assertFileExists($extractDir . '/import/preprints.csv');
+        $this->assertFileExists($extractDir . '/import/submissions.csv');
 
         $this->cleanupTempDirectory($extractDir);
     }
@@ -136,7 +136,7 @@ class ZipExtractorTest extends BaseTestCase
     public function testResolveSourceDirWithFlatCsvsReturnsExtractDir(): void
     {
         $dir = $this->createTempDirectory();
-        file_put_contents($dir . '/preprints.csv', 'title,author');
+        file_put_contents($dir . '/submissions.csv', 'title,author');
         file_put_contents($dir . '/users.csv', 'email,name');
 
         $resolved = ZipExtractor::resolveSourceDir($dir);
@@ -150,7 +150,7 @@ class ZipExtractorTest extends BaseTestCase
         $dir    = $this->createTempDirectory();
         $subdir = $dir . '/my_import';
         mkdir($subdir);
-        file_put_contents($subdir . '/preprints.csv', 'title,author');
+        file_put_contents($subdir . '/submissions.csv', 'title,author');
 
         $resolved = ZipExtractor::resolveSourceDir($dir);
 
@@ -163,7 +163,7 @@ class ZipExtractorTest extends BaseTestCase
         $dir = $this->createTempDirectory();
         mkdir($dir . '/subdir_a');
         mkdir($dir . '/subdir_b');
-        file_put_contents($dir . '/subdir_a/preprints.csv', 'title,author');
+        file_put_contents($dir . '/subdir_a/submissions.csv', 'title,author');
         file_put_contents($dir . '/subdir_b/users.csv', 'email,name');
 
         $resolved = ZipExtractor::resolveSourceDir($dir);

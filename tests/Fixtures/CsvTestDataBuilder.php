@@ -17,11 +17,11 @@ namespace APP\plugins\importexport\csv\shared\tests\Fixtures;
 class CsvTestDataBuilder
 {
     /**
-     * Build a preprint data row with fluent interface
+     * Build a submission data row with fluent interface
      */
-    public static function preprint(): PreprintDataBuilder
+    public static function submission(): SubmissionDataBuilder
     {
-        return new PreprintDataBuilder();
+        return new SubmissionDataBuilder();
     }
 
     /**
@@ -33,11 +33,11 @@ class CsvTestDataBuilder
     }
 
     /**
-     * Get preprint headers
+     * Get submission headers
      */
-    public static function getPreprintHeaders(): array
+    public static function getSubmissionHeaders(): array
     {
-        return PreprintDataBuilder::PREPRINT_HEADERS;
+        return SubmissionDataBuilder::SUBMISSION_HEADERS;
     }
 
     /**
@@ -49,33 +49,33 @@ class CsvTestDataBuilder
     }
 
     /**
-     * Create a minimal valid preprint row (only required fields)
+     * Create a minimal valid submission row (only required fields)
      */
-    public static function minimalPreprintRow(): array
+    public static function minimalSubmissionRow(): array
     {
-        return self::preprint()
-            ->withServerPath('testserver')
+        return self::submission()
+            ->withContextPath('testcontext')
             ->withLocale('en')
-            ->withTitle('Minimal Test Preprint')
+            ->withTitle('Minimal Test Submission')
             ->withAuthors('John,Doe,john@example.com,,Test University')
-            ->withDatePosted('2024-01-15')
-            ->withSectionTitle('Preprints')
-            ->withSectionAbbrev('PRE')
+            ->withDatePublished('2024-01-15')
+            ->withSectionTitle('Articles')
+            ->withSectionAbbrev('ART')
             ->buildArray();
     }
 
     /**
-     * Create a complete preprint row with all optional fields
+     * Create a complete submission row with all optional fields
      */
-    public static function completePreprintRow(): array
+    public static function completeSubmissionRow(): array
     {
-        return self::preprint()
-            ->withServerPath('testserver')
+        return self::submission()
+            ->withContextPath('testcontext')
             ->withLocale('en')
             ->withVersionIdentifier('TEST-2024-001')
             ->withVersion('1')
             ->withPrefix('QC')
-            ->withTitle('Complete Test Preprint')
+            ->withTitle('Complete Test Submission')
             ->withSubtitle('A Comprehensive Study')
             ->withAbstract('This is a complete test abstract with all fields.')
             ->withAuthors('Jane,Smith,jane@example.com,0000-0002-1825-0097,MIT;John,Doe,john@example.com,,Harvard')
@@ -84,9 +84,9 @@ class CsvTestDataBuilder
             ->withCoverage('Global study')
             ->withCategories('Research Article')
             ->withDoi('10.1234/test-001')
-            ->withSectionTitle('Preprints')
-            ->withSectionAbbrev('PRE')
-            ->withDatePosted('2024-01-15')
+            ->withSectionTitle('Articles')
+            ->withSectionAbbrev('ART')
+            ->withDatePublished('2024-01-15')
             ->withDateSubmitted('2024-01-10')
             ->withCopyrightYear('2024')
             ->withCopyrightHolder('Test Institute')
@@ -101,7 +101,7 @@ class CsvTestDataBuilder
     public static function minimalUserRow(): array
     {
         return self::user()
-            ->withServerPath('testserver')
+            ->withContextPath('testcontext')
             ->withFirstname('John')
             ->withLastname('Doe')
             ->withEmail('john@example.com')
@@ -117,7 +117,7 @@ class CsvTestDataBuilder
     public static function completeUserRow(): array
     {
         return self::user()
-            ->withServerPath('testserver')
+            ->withContextPath('testcontext')
             ->withFirstname('Jane')
             ->withLastname('Smith')
             ->withEmail('jane@example.com')
@@ -133,19 +133,19 @@ class CsvTestDataBuilder
 }
 
 /**
- * Builder for preprint data rows
+ * Builder for submission data rows
  */
-class PreprintDataBuilder
+class SubmissionDataBuilder
 {
-    public const PREPRINT_HEADERS = [
-        'serverPath', 'locale', 'versionIdentifier', 'version',
-        'preprintPrefix', 'preprintTitle', 'preprintSubtitle', 'preprintAbstract',
+    public const SUBMISSION_HEADERS = [
+        'contextPath', 'locale', 'versionIdentifier', 'version',
+        'prefix', 'title', 'subtitle', 'abstract',
         'authors', 'keywords', 'subjects', 'coverage', 'categories', 'doi',
         'coverImageFilename', 'coverImageAltText', 'galleyFilenames', 'galleyLabels',
         'galleyViews', 'suppFilenames', 'suppLabels', 'suppDescriptions',
-        'sectionTitle', 'sectionAbbrev', 'datePosted', 'dateSubmitted',
+        'sectionTitle', 'sectionAbbrev', 'datePublished', 'dateSubmitted',
         'copyrightYear', 'copyrightHolder', 'licenseUrl', 'references',
-        'vorDoi', 'supportingAgencies', 'username', 'funders', 'preprintViews',
+        'vorDoi', 'supportingAgencies', 'username', 'funders', 'views',
     ];
 
     private array $data;
@@ -153,12 +153,12 @@ class PreprintDataBuilder
     public function __construct()
     {
         // Initialize with empty values for all headers
-        $this->data = array_fill_keys(self::PREPRINT_HEADERS, '');
+        $this->data = array_fill_keys(self::SUBMISSION_HEADERS, '');
     }
 
-    public function withServerPath(string $serverPath): self
+    public function withContextPath(string $contextPath): self
     {
-        $this->data['serverPath'] = $serverPath;
+        $this->data['contextPath'] = $contextPath;
         return $this;
     }
 
@@ -182,25 +182,25 @@ class PreprintDataBuilder
 
     public function withPrefix(string $prefix): self
     {
-        $this->data['preprintPrefix'] = $prefix;
+        $this->data['prefix'] = $prefix;
         return $this;
     }
 
     public function withTitle(string $title): self
     {
-        $this->data['preprintTitle'] = $title;
+        $this->data['title'] = $title;
         return $this;
     }
 
     public function withSubtitle(string $subtitle): self
     {
-        $this->data['preprintSubtitle'] = $subtitle;
+        $this->data['subtitle'] = $subtitle;
         return $this;
     }
 
     public function withAbstract(string $abstract): self
     {
-        $this->data['preprintAbstract'] = $abstract;
+        $this->data['abstract'] = $abstract;
         return $this;
     }
 
@@ -274,9 +274,9 @@ class PreprintDataBuilder
         return $this;
     }
 
-    public function withDatePosted(string $date): self
+    public function withDatePublished(string $date): self
     {
-        $this->data['datePosted'] = $date;
+        $this->data['datePublished'] = $date;
         return $this;
     }
 
@@ -365,7 +365,7 @@ class PreprintDataBuilder
 class UserDataBuilder
 {
     public const USER_HEADERS = [
-        'serverPath', 'firstname', 'lastname', 'email', 'affiliation',
+        'contextPath', 'firstname', 'lastname', 'email', 'affiliation',
         'country', 'username', 'tempPassword', 'roles', 'reviewInterests', 'orcid',
     ];
 
@@ -377,9 +377,9 @@ class UserDataBuilder
         $this->data = array_fill_keys(self::USER_HEADERS, '');
     }
 
-    public function withServerPath(string $serverPath): self
+    public function withContextPath(string $contextPath): self
     {
-        $this->data['serverPath'] = $serverPath;
+        $this->data['contextPath'] = $contextPath;
         return $this;
     }
 
@@ -478,9 +478,9 @@ class MultiVersionScenarioBuilder
     /**
      * Add version 1 in primary locale
      */
-    public function addVersion1(string $locale = 'en'): PreprintDataBuilder
+    public function addVersion1(string $locale = 'en'): SubmissionDataBuilder
     {
-        $builder = new PreprintDataBuilder();
+        $builder = new SubmissionDataBuilder();
         $builder->withLocale($locale)->withVersion('1');
         $this->rows[] = $builder;
         return $builder;
@@ -489,9 +489,9 @@ class MultiVersionScenarioBuilder
     /**
      * Add version 2 (inherits from version 1)
      */
-    public function addVersion2(string $locale = 'en'): PreprintDataBuilder
+    public function addVersion2(string $locale = 'en'): SubmissionDataBuilder
     {
-        $builder = new PreprintDataBuilder();
+        $builder = new SubmissionDataBuilder();
         $builder->withLocale($locale)->withVersion('2');
         $this->rows[] = $builder;
         return $builder;
@@ -500,9 +500,9 @@ class MultiVersionScenarioBuilder
     /**
      * Add additional locale for same version
      */
-    public function addLocale(string $version, string $locale): PreprintDataBuilder
+    public function addLocale(string $version, string $locale): SubmissionDataBuilder
     {
-        $builder = new PreprintDataBuilder();
+        $builder = new SubmissionDataBuilder();
         $builder->withLocale($locale)->withVersion($version);
         $this->rows[] = $builder;
         return $builder;

@@ -120,14 +120,14 @@ class UsersProcessorTest extends BaseTestCase
     public function testUserDataObjectCreation(): void
     {
         $data = CsvTestDataBuilder::user()
-            ->withServerPath('testserver')
+            ->withContextPath('testcontext')
             ->withFirstname('John')
             ->withLastname('Doe')
             ->withEmail('john@example.com')
             ->withRoles('Author')
             ->buildObject();
 
-        $this->assertEquals('testserver', $data->serverPath);
+        $this->assertEquals('testcontext', $data->contextPath);
         $this->assertEquals('John', $data->firstname);
         $this->assertEquals('Doe', $data->lastname);
         $this->assertEquals('john@example.com', $data->email);
@@ -295,7 +295,7 @@ class UsersProcessorTest extends BaseTestCase
     public function testCompleteUserDataObject(): void
     {
         $data = CsvTestDataBuilder::user()
-            ->withServerPath('testserver')
+            ->withContextPath('testcontext')
             ->withFirstname('John')
             ->withLastname('Doe')
             ->withEmail('john@example.com')
@@ -308,7 +308,7 @@ class UsersProcessorTest extends BaseTestCase
             ->withOrcid('0000-0002-1825-0097')
             ->buildObject();
 
-        $this->assertEquals('testserver', $data->serverPath);
+        $this->assertEquals('testcontext', $data->contextPath);
         $this->assertEquals('John', $data->firstname);
         $this->assertEquals('Doe', $data->lastname);
         $this->assertEquals('john@example.com', $data->email);

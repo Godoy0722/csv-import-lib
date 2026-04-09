@@ -75,18 +75,18 @@ class WelcomeEmailHandlerTest extends BaseTestCase
         $this->assertEquals('sender@example.com', $sender->getEmail());
     }
 
-    // ==================== Server Data Tests ====================
+    // ==================== Context Data Tests ====================
 
-    public function testServerCanBeCreated(): void
+    public function testContextCanBeCreated(): void
     {
-        $server = MockFactory::server()
+        $context = MockFactory::context()
             ->withId(1)
             ->withPath('testserver')
             ->withContactEmail('server@example.com')
             ->build();
 
-        $this->assertEquals(1, $server->getId());
-        $this->assertEquals('server@example.com', $server->getContactEmail());
+        $this->assertEquals(1, $context->getId());
+        $this->assertEquals('server@example.com', $context->getContactEmail());
     }
 
     // ==================== Password Parameter Tests ====================
@@ -142,7 +142,7 @@ class WelcomeEmailHandlerTest extends BaseTestCase
             'recipientName' => 'John Doe',
             'senderEmail' => 'sender@example.com',
             'senderName' => 'Admin User',
-            'serverName' => 'Test Server',
+            'contextName' => 'Test Context',
             'password' => 'temppassword',
         ];
 
@@ -188,13 +188,13 @@ class WelcomeEmailHandlerTest extends BaseTestCase
             ->once()
             ->andReturn($template);
 
-        $server = $this->createMockServer([
+        $context = $this->createMockContext([
             'id' => 1,
             'path' => 'testserver',
             'contactEmail' => 'server@example.com',
         ]);
-        $server->setData('contactEmail', 'server@example.com');
-        $server->setData('contactName', 'Test Server Admin');
+        $context->setData('contactEmail', 'server@example.com');
+        $context->setData('contactName', 'Test Context Admin');
 
         $recipient = $this->createMockUser([
             'id' => 10,
@@ -212,7 +212,7 @@ class WelcomeEmailHandlerTest extends BaseTestCase
 
         Mail::shouldReceive('send')->once();
 
-        WelcomeEmailHandler::sendWelcomeEmail($server, $recipient, $sender, 'temppass123');
+        WelcomeEmailHandler::sendWelcomeEmail($context, $recipient, $sender, 'temppass123');
 
         $this->assertTrue(true);
     }
@@ -229,13 +229,13 @@ class WelcomeEmailHandlerTest extends BaseTestCase
             ->once()
             ->andReturn($template);
 
-        $server = $this->createMockServer([
+        $context = $this->createMockContext([
             'id' => 1,
             'path' => 'testserver',
             'contactEmail' => 'server@example.com',
         ]);
-        $server->setData('contactEmail', 'server@example.com');
-        $server->setData('contactName', 'Test Server Admin');
+        $context->setData('contactEmail', 'server@example.com');
+        $context->setData('contactName', 'Test Context Admin');
 
         $recipient = $this->createMockUser([
             'id' => 10,
@@ -260,6 +260,6 @@ class WelcomeEmailHandlerTest extends BaseTestCase
 
         $this->expectOutputString('SMTP connection failed');
 
-        WelcomeEmailHandler::sendWelcomeEmail($server, $recipient, $sender, 'temppass123');
+        WelcomeEmailHandler::sendWelcomeEmail($context, $recipient, $sender, 'temppass123');
     }
 }

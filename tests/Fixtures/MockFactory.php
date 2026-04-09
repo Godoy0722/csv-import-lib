@@ -16,7 +16,7 @@ namespace APP\plugins\importexport\csv\shared\tests\Fixtures;
 
 use APP\publication\Publication;
 use APP\section\Section;
-use APP\server\Server;
+use PKP\context\Context;
 use APP\submission\Submission;
 use APP\author\Author;
 use Illuminate\Support\Collection;
@@ -41,11 +41,11 @@ class MockFactory
     }
 
     /**
-     * Create a mock Server with fluent interface
+     * Create a mock Context with fluent interface
      */
-    public static function server(): ServerBuilder
+    public static function context(): ContextBuilder
     {
-        return new ServerBuilder();
+        return new ContextBuilder();
     }
 
     /**
@@ -213,18 +213,19 @@ class UserBuilder
 }
 
 /**
- * Builder for Server mock objects
+ * Builder for Context mock objects
  */
-class ServerBuilder
+class ContextBuilder
 {
     private array $data = [
         'id' => 1,
-        'path' => 'testserver',
-        'name' => 'Test Server',
+        'path' => 'testcontext',
+        'name' => 'Test Context',
         'locale' => 'en',
         'supportedLocales' => ['en'],
         'primaryLocale' => 'en',
         'contactEmail' => 'contact@example.com',
+        'contactName' => 'Test Admin',
     ];
 
     public function withId(int $id): self
@@ -271,22 +272,23 @@ class ServerBuilder
 
     public function build(): MockInterface
     {
-        $server = Mockery::mock(Server::class)->makePartial();
-        $server->setId($this->data['id']);
-        $server->setPath($this->data['path']);
-        $server->setName($this->data['name'], $this->data['locale']);
-        $server->setPrimaryLocale($this->data['primaryLocale']);
+        $context = Mockery::mock(Context::class)->makePartial();
 
-        $server->shouldReceive('getSupportedSubmissionLocales')
+        $context->shouldReceive('getId')->andReturn($this->data['id']);
+        $context->shouldReceive('getSupportedSubmissionLocales')
             ->andReturn($this->data['supportedLocales']);
-        $server->shouldReceive('getPrimaryLocale')
+        $context->shouldReceive('getPrimaryLocale')
             ->andReturn($this->data['primaryLocale']);
-        $server->shouldReceive('getContactEmail')
+        $context->shouldReceive('getContactEmail')
             ->andReturn($this->data['contactEmail']);
-        $server->shouldReceive('getId')
-            ->andReturn($this->data['id']);
+        $context->shouldReceive('getData')
+            ->with('contactEmail')
+            ->andReturn($this->data['contactEmail']);
+        $context->shouldReceive('getData')
+            ->with('contactName')
+            ->andReturn($this->data['contactName']);
 
-        return $server;
+        return $context;
     }
 }
 
