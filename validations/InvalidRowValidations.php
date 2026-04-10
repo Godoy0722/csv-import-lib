@@ -16,7 +16,6 @@
 
 namespace APP\plugins\importexport\csv\shared\validations;
 
-use APP\core\Application;
 use APP\plugins\importexport\csv\shared\cachedAttributes\CachedEntities;
 use APP\plugins\importexport\csv\shared\exceptions\RowValidationException;
 use APP\plugins\importexport\csv\shared\processors\FundersProcessor;
@@ -336,94 +335,6 @@ class InvalidRowValidations
         $extension = pathinfo(mb_strtolower($referencesFilename), PATHINFO_EXTENSION);
         if ($extension !== 'txt') {
             throw new RowValidationException(__('plugins.importexport.csv.invalidReferencesFileExtension'));
-        }
-    }
-
-    /**
-     * Validates the ORCID value.
-     *
-     * Accepts the following formats:
-     * - Full URL: https://orcid.org/0000-0002-1825-0097 or https://sandbox.orcid.org/0000-0002-1825-0097
-     * - Dashed format: 0000-0002-1825-0097
-     * - Numeric format: 0000000218250097
-     * - Can end with X (checksum character)
-     *
-     * @throws RowValidationException
-     */
-    public static function validateOrcid(?string $orcid): void
-    {
-        if (empty($orcid)) {
-            return;
-        }
-
-        $normalizedOrcid = static::normalizeOrcid($orcid);
-
-        if ($normalizedOrcid === null) {
-            throw new RowValidationException(__('plugins.importexport.csv.invalidOrcidFormat', ['orcid' => $orcid]));
-        }
-
-        // Extract just the ORCID ID from the URL before digit validation
-        // This prevents the 'x' in 'sandbox' from being counted as a digit
-        $orcidId = preg_replace('/^https?:\/\/(sandbox\.)?orcid\.org\//', '', $normalizedOrcid);
-        $digits = preg_replace('/[^0-9X]/i', '', $orcidId);
-
-        if (strlen($digits) !== 16) {
-            throw new RowValidationException(__('plugins.importexport.csv.invalidOrcidFormat', ['orcid' => $orcid]));
-        }
-
-        if (!static::validateOrcidExists($normalizedOrcid)) {
-            throw new RowValidationException(__('plugins.importexport.csv.orcidNotFound', ['orcid' => $orcid]));
-        }
-    }
-
-    /**
-     * Normalizes an ORCID value to the full URL format.
-     */
-    public static function normalizeOrcid(string $orcid): ?string
-    {
-        $orcid = trim($orcid);
-
-        if (empty($orcid)) {
-            return null;
-        }
-
-        if (preg_match('/^https:\/\/(sandbox\.)?orcid\.org\/(\d{4})-(\d{4})-(\d{4})-(\d{3}[0-9X])$/i', $orcid)) {
-            return $orcid;
-        }
-
-        if (preg_match('/^(\d{4})-(\d{4})-(\d{4})-(\d{3}[0-9X])$/i', $orcid)) {
-            return 'https://orcid.org/' . $orcid;
-        }
-
-        if (preg_match('/^(\d{15}[0-9X])$/', $orcid)) {
-            $formatted = substr($orcid, 0, 4) . '-' .
-                         substr($orcid, 4, 4) . '-' .
-                         substr($orcid, 8, 4) . '-' .
-                         substr($orcid, 12, 4);
-            return 'https://orcid.org/' . $formatted;
-        }
-
-        return null;
-    }
-
-    /**
-     * Validates if the ORCID entry exists via web request.
-     */
-    private static function validateOrcidExists(string $orcid): bool
-    {
-        try {
-            $client = Application::get()->getHttpClient();
-            $response = $client->request('HEAD', $orcid, [
-                'http_errors' => true,
-                'connect_timeout' => 5,
-                'headers' => [
-                    'Accept' => 'application/json, application/xml, text/html'
-                ]
-            ]);
-
-            return $response->getStatusCode() === 200;
-        } catch (\Exception $e) {
-            return false;
         }
     }
 

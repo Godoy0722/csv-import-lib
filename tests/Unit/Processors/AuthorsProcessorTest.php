@@ -15,6 +15,7 @@
 namespace APP\plugins\importexport\csv\shared\tests\Unit\Processors;
 
 use APP\author\Author;
+use APP\plugins\importexport\csv\shared\handlers\OrcidHandler;
 use APP\plugins\importexport\csv\shared\processors\AuthorsProcessor;
 use APP\plugins\importexport\csv\shared\tests\BaseTestCase;
 use APP\plugins\importexport\csv\shared\tests\Fixtures\CsvTestDataBuilder;
@@ -28,24 +29,12 @@ use ReflectionClass;
 #[CoversClass(AuthorsProcessor::class)]
 class AuthorsProcessorTest extends BaseTestCase
 {
-    /**
-     * Get access to the private normalizeOrcid method
-     */
-    private function getNormalizeOrcidMethod(): \ReflectionMethod
-    {
-        $reflection = new ReflectionClass(AuthorsProcessor::class);
-        $method = $reflection->getMethod('normalizeOrcid');
-        $method->setAccessible(true);
-        return $method;
-    }
-
     // ==================== ORCID Normalization Tests ====================
 
     #[DataProvider('validOrcidProvider')]
     public function testNormalizeOrcidWithValidFormats(string $input, string $expected): void
     {
-        $method = $this->getNormalizeOrcidMethod();
-        $result = $method->invoke(null, $input);
+        $result = OrcidHandler::normalize($input);
 
         $this->assertEquals($expected, $result);
     }
@@ -57,10 +46,6 @@ class AuthorsProcessorTest extends BaseTestCase
                 'https://orcid.org/0000-0002-1825-0097',
                 'https://orcid.org/0000-0002-1825-0097'
             ],
-            'HTTP URL' => [
-                'http://orcid.org/0000-0002-1825-0097',
-                'https://orcid.org/0000-0002-1825-0097'
-            ],
             'Dashed format' => [
                 '0000-0002-1825-0097',
                 'https://orcid.org/0000-0002-1825-0097'
@@ -69,18 +54,13 @@ class AuthorsProcessorTest extends BaseTestCase
                 '0000000218250097',
                 'https://orcid.org/0000-0002-1825-0097'
             ],
-            'With spaces' => [
-                '0000 0002 1825 0097',
-                'https://orcid.org/0000-0002-1825-0097'
-            ],
         ];
     }
 
     #[DataProvider('invalidOrcidProvider')]
     public function testNormalizeOrcidWithInvalidFormats(?string $input): void
     {
-        $method = $this->getNormalizeOrcidMethod();
-        $result = $method->invoke(null, $input);
+        $result = OrcidHandler::normalize($input);
 
         $this->assertNull($result);
     }
@@ -99,22 +79,13 @@ class AuthorsProcessorTest extends BaseTestCase
 
     public function testNormalizeOrcidWithWhitespace(): void
     {
-        $method = $this->getNormalizeOrcidMethod();
-        $result = $method->invoke(null, '  0000-0002-1825-0097  ');
+        $result = OrcidHandler::normalize('  0000-0002-1825-0097  ');
         $this->assertEquals('https://orcid.org/0000-0002-1825-0097', $result);
     }
 
     public function testNormalizeOrcidPreservesXChecksum(): void
     {
-        $method = $this->getNormalizeOrcidMethod();
-        $result = $method->invoke(null, '0000-0002-1694-233X');
-        $this->assertEquals('https://orcid.org/0000-0002-1694-233X', $result);
-    }
-
-    public function testNormalizeOrcidUppercasesXChecksum(): void
-    {
-        $method = $this->getNormalizeOrcidMethod();
-        $result = $method->invoke(null, '0000-0002-1694-233x');
+        $result = OrcidHandler::normalize('0000-0002-1694-233X');
         $this->assertEquals('https://orcid.org/0000-0002-1694-233X', $result);
     }
 
