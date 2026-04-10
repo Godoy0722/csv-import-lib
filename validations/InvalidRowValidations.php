@@ -339,29 +339,6 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates the VOR DOI field.
-     *
-     * Accepted formats:
-     * - Full URL: https://doi.org/10.1234/example
-     * - DOI identifier: 10.1234/example
-     * - With doi: prefix: doi:10.1234/example
-     *
-     * @throws RowValidationException
-     */
-    public static function validateVorDoi(?string $vorDoi): void
-    {
-        if (empty($vorDoi)) {
-            return;
-        }
-
-        $normalizedDoi = static::normalizeVorDoi($vorDoi);
-
-        if ($normalizedDoi === null) {
-            throw new RowValidationException(__('plugins.importexport.csv.invalidVorDoiFormat', ['vorDoi' => $vorDoi]));
-        }
-    }
-
-    /**
      * Normalizes a VOR DOI value to the full URL format.
      */
     public static function normalizeVorDoi(?string $vorDoi): ?string
