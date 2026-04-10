@@ -17,6 +17,7 @@
 namespace APP\plugins\importexport\csv\shared\processors;
 
 use APP\facades\Repo;
+use APP\plugins\importexport\csv\shared\handlers\OrcidHandler;
 use APP\publication\Publication;
 use APP\submission\Submission;
 use PKP\context\Context;
@@ -32,8 +33,7 @@ class AuthorsProcessor
         int $userGroupId,
         ?Publication $basePublication = null,
         ?User $usernameUser = null
-    ): void
-    {
+    ): void {
         if (empty($data->authors) && !is_null($basePublication)) {
             static::cloneAuthorsFromBasePublication($basePublication, $publication, $submissionId);
             return;
@@ -187,28 +187,6 @@ class AuthorsProcessor
         }
     }
 
-    private static function normalizeOrcid(?string $raw): ?string
-    {
-        if (empty($raw)) {
-            return null;
-        }
-
-        $value = trim($raw);
-        $id = $value;
-        if (preg_match('/^https?:\\/\\/orcid\\.org\\/(.+)$/i', $value, $m)) {
-            $id = $m[1];
-        }
-
-        $id = mb_strtoupper(str_replace([' ', '-'], '', $id));
-        if (!preg_match('/^\\d{15}[\\dX]$/', $id)) {
-            return null;
-        }
-
-        $parts = mb_str_split($id, 4);
-        $hyphenated = implode('-', $parts);
-        return 'https://orcid.org/' . $hyphenated;
-    }
-
     /**
      * Process authors for multi-locale import (adds locale data to existing authors)
      */
@@ -305,7 +283,7 @@ class AuthorsProcessor
             $author->setFamilyName($familyName, $locale);
         }
 
-        $normalizedOrcid = static::normalizeOrcid($orcid);
+        $normalizedOrcid = OrcidHandler::normalize($orcid);
         if (!empty($normalizedOrcid)) {
             $author->setOrcid($normalizedOrcid);
             $author->setOrcidVerified(true);
