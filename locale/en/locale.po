@@ -220,3 +220,6 @@ msgstr "Download invalid rows"
 
 msgid "plugins.importexport.csv.ExecutedInNSeconds"
 msgstr "Executed in: {$seconds} seconds.\n"
+
+msgid "plugins.importexport.csv.form.userImportHelp"
+msgstr "<b>Users:</b> For user imports, you can upload a single CSV file directly without zipping. If you have multiple CSV files, bundle them into a ZIP archive following the same structure rules described above."
