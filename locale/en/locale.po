@@ -148,3 +148,75 @@ msgstr "ZIP archive rejected: entry \"{$entry}\" contains a path traversal seque
 
 msgid "plugins.importexport.csv.importLocked"
 msgstr "An import is currently in progress. Please wait for it to complete before starting another."
+
+msgid "plugins.importexport.csv.form.submitButton"
+msgstr "Import"
+
+msgid "plugins.importexport.csv.form.importing"
+msgstr "Importing"
+
+msgid "plugins.importexport.csv.form.imported"
+msgstr "Imported"
+
+msgid "plugins.importexport.csv.form.importFile"
+msgstr "Import File"
+
+msgid "plugins.importexport.csv.form.importFile.description"
+msgstr "Upload a ZIP file containing CSV files and assets (cover images, galley files), or a single CSV file directly."
+
+msgid "plugins.importexport.csv.form.importType"
+msgstr "Import Type"
+
+msgid "plugins.importexport.csv.form.importType.users"
+msgstr "Users"
+
+msgid "plugins.importexport.csv.form.dryMode"
+msgstr "Dry Run"
+
+msgid "plugins.importexport.csv.form.dryMode.description"
+msgstr "Validate all CSV data without writing to the database. Review results before running a real import."
+
+msgid "plugins.importexport.csv.form.dryMode.enable"
+msgstr "Enable dry-run mode"
+
+msgid "plugins.importexport.csv.form.sendWelcomeEmail"
+msgstr "Welcome Email"
+
+msgid "plugins.importexport.csv.form.sendWelcomeEmail.enable"
+msgstr "Send welcome email to imported users"
+
+msgid "plugins.importexport.csv.uploadFailed"
+msgstr "File upload failed."
+
+msgid "plugins.importexport.csv.invalidImportType"
+msgstr "Invalid import type: \"{$importType}\"."
+
+msgid "plugins.importexport.csv.zipExtractionFailed"
+msgstr "Failed to extract ZIP file: {$reason}"
+
+msgid "plugins.importexport.csv.results.dryModeTitle"
+msgstr "Dry-Run Results"
+
+msgid "plugins.importexport.csv.results.importCompleteTitle"
+msgstr "Import Complete"
+
+msgid "plugins.importexport.csv.results.importType"
+msgstr "Import Type"
+
+msgid "plugins.importexport.csv.results.filesProcessed"
+msgstr "Files Processed"
+
+msgid "plugins.importexport.csv.results.totalRows"
+msgstr "Total Rows"
+
+msgid "plugins.importexport.csv.results.successfulRows"
+msgstr "Successful Rows"
+
+msgid "plugins.importexport.csv.results.failedRows"
+msgstr "Failed Rows"
+
+msgid "plugins.importexport.csv.results.invalidFiles"
+msgstr "Download invalid rows"
+
+msgid "plugins.importexport.csv.ExecutedInNSeconds"
+msgstr "Executed in: {$seconds} seconds.\n"
