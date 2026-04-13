@@ -4,29 +4,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     var currentUuid = null;
 
-    var importingLabel = config.labels.importing || "Importing";
-    var importedLabel = config.labels.imported || "Imported";
-    var savingLabel = pkp.localeKeys["common.saving"] || "Saving";
-    var savedLabel = pkp.localeKeys["form.saved"] || "Saved";
-
-    var statusObserver = new MutationObserver(function() {
-        var csvTab = document.getElementById("csvImportPlugin");
-        if (!csvTab) return;
-
-        var statusSpans = csvTab.querySelectorAll(".pkpFormPage__status");
-        statusSpans.forEach(function(span) {
-            span.childNodes.forEach(function(node) {
-                if (node.nodeType !== 3) return;
-                var text = node.textContent.trim();
-                if (text === savingLabel) {
-                    node.textContent = " " + importingLabel;
-                } else if (text === savedLabel) {
-                    node.textContent = " " + importedLabel;
-                }
-            });
-        });
-    });
-    statusObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+    pkp.localeKeys["common.saving"] = config.labels.importing || "Processing";
+    pkp.localeKeys["form.saved"] = config.labels.imported || "Saved";
 
     pkp.eventBus.$on("form-success", function(fId, response) {
         if (fId !== config.formId) return;

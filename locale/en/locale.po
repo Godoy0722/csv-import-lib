@@ -153,10 +153,10 @@ msgid "plugins.importexport.csv.form.submitButton"
 msgstr "Import"
 
 msgid "plugins.importexport.csv.form.importing"
-msgstr "Importing"
+msgstr "Processing"
 
 msgid "plugins.importexport.csv.form.imported"
-msgstr "Imported"
+msgstr "Completed"
 
 msgid "plugins.importexport.csv.form.importFile"
 msgstr "Import File"
