@@ -41,12 +41,22 @@ class InvalidRowValidations
             throw new RowValidationException(__('plugins.importexport.csv.invalidSourceDir'));
         }
 
-        $resolvedPath = realpath("{$resolvedSourceDir}/{$filename}");
-        if ($resolvedPath === false || !str_starts_with($resolvedPath, $resolvedSourceDir . DIRECTORY_SEPARATOR)) {
+        $hasNullByte = str_contains($filename, "\0");
+        $hasTraversal = preg_match('#(^|[\\\\/])\.\.([\\\\/]|$)#', $filename) === 1;
+        $isAbsolute = preg_match('#^([a-zA-Z]:)?[\\\\/]#', $filename) === 1;
+
+        if ($hasNullByte || $hasTraversal || $isAbsolute) {
             throw new RowValidationException(__('plugins.importexport.csv.filePathEscapesSourceDir', ['filename' => $filename]));
         }
 
-        return $resolvedPath;
+        $candidatePath = "{$resolvedSourceDir}/{$filename}";
+        $resolvedPath = realpath($candidatePath);
+
+        if ($resolvedPath !== false && !str_starts_with($resolvedPath, $resolvedSourceDir . DIRECTORY_SEPARATOR)) {
+            throw new RowValidationException(__('plugins.importexport.csv.filePathEscapesSourceDir', ['filename' => $filename]));
+        }
+
+        return $resolvedPath !== false ? $resolvedPath : $candidatePath;
     }
 
     /**
