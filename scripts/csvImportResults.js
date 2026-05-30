@@ -16,16 +16,71 @@ document.addEventListener("DOMContentLoaded", function() {
         var downloadBaseUrl = config.downloadBaseUrl;
         var bodyHtml = buildModalContent(response, labels, downloadBaseUrl);
         var title = response.resultDryMode ? labels.dryModeTitle : labels.importCompleteTitle;
-        var accentColor = response.resultFailedRows > 0 ? "#D00A6C" : "#00B24E";
+        var closeLabel = (pkp.localeKeys && pkp.localeKeys["common.close"]) || "Close";
 
-        showModal(title, bodyHtml, accentColor, function() {
-            callCleanup(currentUuid);
-            currentUuid = null;
+        pkp.eventBus.$emit("open-dialog-vue", {
+            dialogProps: {
+                name: "csvImportResults",
+                title: title,
+                message: bodyHtml,
+                modalStyle: response.resultFailedRows > 0 ? "negative" : "primary",
+                actions: [
+                    {
+                        label: closeLabel,
+                        isPrimary: true,
+                        callback: function(close) {
+                            callCleanup(currentUuid);
+                            currentUuid = null;
+                            close();
+                        }
+                    }
+                ],
+                close: function() {
+                    callCleanup(currentUuid);
+                    currentUuid = null;
+                }
+            }
         });
+
+        // The dialog mounts asynchronously after the event. Once our marker shows up
+        // in the DOM, widen its DialogContent panel directly with inline !important
+        // styles so we win over the core max-width cap regardless of CSS specificity.
+        widenDialogPanel();
     });
+
+    function widenDialogPanel() {
+        var attempts = 0;
+
+        function tryApply() {
+            attempts++;
+            var marker = document.querySelector("[data-csv-import-results]");
+            // The PKP dialog panel uses the "DialogContent" class. Prefer the panel that
+            // contains our marker; fall back to the currently open dialog (this handler
+            // runs right after we open ours) if the marker got stripped from the message.
+            var panel = (marker && marker.closest('[class*="DialogContent"]'))
+                || document.querySelector('[class*="DialogContent"]');
+
+            if (panel) {
+                panel.style.setProperty("width", "75%", "important");
+                panel.style.setProperty("max-width", "75%", "important");
+                return;
+            }
+
+            if (attempts < 60) {
+                requestAnimationFrame(tryApply);
+            }
+        }
+
+        requestAnimationFrame(tryApply);
+    }
 
     function buildModalContent(response, labels, downloadBaseUrl) {
         var html = "";
+
+        // Marker used to locate and widen only this dialog's panel (see widenDialogPanel).
+        html += "<div data-csv-import-results style='display:none;'></div>";
+
+        html += buildIntro(response, labels);
 
         html += "<div style='display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1.5rem; padding:1rem; background:rgba(234,237,238,0.3); border:1px solid #BBBBBB; border-radius:4px;'>";
         html += summaryBadge(labels.filesProcessed, response.resultFilesProcessed, "#222222");
@@ -39,6 +94,35 @@ document.addEventListener("DOMContentLoaded", function() {
                 html += buildFileSection(response.resultPerFile[i], response.uuid, downloadBaseUrl, labels);
             }
         }
+
+        return html;
+    }
+
+    // Explains what the modal is showing. Text adapts to the import type (issues vs
+    // users) and whether dry-run mode was enabled.
+    function buildIntro(response, labels) {
+        var isUsers = response.resultImportType === "users";
+        var isDryMode = !!response.resultDryMode;
+
+        var intro;
+        if (isUsers) {
+            intro = isDryMode ? labels.introUsersDryMode : labels.introUsers;
+        } else {
+            intro = isDryMode ? labels.introIssuesDryMode : labels.introIssues;
+        }
+
+        var accent = isDryMode ? "#0082BF" : (response.resultFailedRows > 0 ? "#D00A6C" : "#00B24E");
+
+        var hasInvalidFiles = response.resultInvalidFiles && response.resultInvalidFiles.length > 0;
+
+        var html = "";
+        html += "<div style='margin-bottom:1.5rem; padding:1rem 1.25rem; background:#F3F6F9; border-left:4px solid " + accent + "; border-radius:2px; font-size:0.875rem; line-height:1.5rem; color:#222222;'>";
+        html += "<p style='margin:0 0 0.75rem;'>" + intro + "</p>";
+        html += "<p style='margin:0; color:#505050;'>" + labels.legend + "</p>";
+        if (hasInvalidFiles) {
+            html += "<p style='margin:0.75rem 0 0; color:#505050;'>" + labels.invalidFilesHint + "</p>";
+        }
+        html += "</div>";
 
         return html;
     }
@@ -115,89 +199,5 @@ document.addEventListener("DOMContentLoaded", function() {
             headers: { "X-Csrf-Token": pkp.currentUser.csrfToken },
             data: { uuid: uuid }
         });
-    }
-
-    function showModal(title, bodyHtml, accentColor, onClose) {
-        var existing = document.getElementById("csvImportModal");
-        if (existing) existing.remove();
-
-        var overlay = document.createElement("div");
-        overlay.id = "csvImportModal";
-        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 300ms ease-out;";
-
-        var modal = document.createElement("div");
-        modal.style.cssText = "background:#FFFFFF; border-radius:4px; max-width:48rem; width:90%; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 0 4px rgba(0,0,0,0.5); border-left:14px solid " + accentColor + "; transform:scale(0.95); opacity:0; transition:all 300ms ease-out; pointer-events:auto;";
-
-        var header = document.createElement("div");
-        header.style.cssText = "padding:3rem 2rem 2rem 2rem; flex-shrink:0; position:relative;";
-
-        var titleEl = document.createElement("h2");
-        titleEl.textContent = title;
-        titleEl.style.cssText = "margin:0; font-size:1.5rem; font-weight:700; line-height:2rem; color:#01354F; font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;";
-        header.appendChild(titleEl);
-
-        var closeBtn = document.createElement("button");
-        closeBtn.innerHTML = "&#215;";
-        closeBtn.style.cssText = "position:absolute; right:0.75rem; top:0.75rem; width:1.5rem; height:1.5rem; background:none; border:none; font-size:1.25rem; cursor:pointer; color:#D00A6C; display:flex; align-items:center; justify-content:center; border-radius:4px; padding:0;";
-        closeBtn.onmouseenter = function() { this.style.background = "rgba(208,10,108,0.1)"; };
-        closeBtn.onmouseleave = function() { this.style.background = "none"; };
-        closeBtn.onclick = function() { closeModal(overlay, modal, onClose); };
-        header.appendChild(closeBtn);
-
-        var body = document.createElement("div");
-        body.style.cssText = "padding:0 2rem; overflow-y:auto; flex:1; font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:0.875rem; color:#222222; line-height:1.25rem;";
-        body.innerHTML = bodyHtml;
-
-        var footer = document.createElement("div");
-        footer.style.cssText = "padding:1.5rem 2rem; border-top:1px solid #BBBBBB; text-align:right; flex-shrink:0;";
-
-        var closeFooterBtn = document.createElement("button");
-        closeFooterBtn.textContent = "Close";
-        closeFooterBtn.style.cssText = "padding:0 12px; background:#006798; color:#FFFFFF; border:1px solid transparent; border-radius:4px; cursor:pointer; font-size:0.875rem; font-weight:600; font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; display:inline-flex; align-items:center;";
-        closeFooterBtn.onmouseenter = function() { this.style.background = "#0082BF"; };
-        closeFooterBtn.onmouseleave = function() { this.style.background = "#006798"; };
-        closeFooterBtn.onclick = function() { closeModal(overlay, modal, onClose); };
-        footer.appendChild(closeFooterBtn);
-
-        modal.appendChild(header);
-        modal.appendChild(body);
-        modal.appendChild(footer);
-        overlay.appendChild(modal);
-
-        overlay.addEventListener("click", function(e) {
-            if (e.target === overlay) closeModal(overlay, modal, onClose);
-        });
-
-        var escHandler = function(e) {
-            if (e.key === "Escape") {
-                closeModal(overlay, modal, onClose);
-                document.removeEventListener("keydown", escHandler);
-            }
-        };
-        document.addEventListener("keydown", escHandler);
-
-        document.body.appendChild(overlay);
-
-        requestAnimationFrame(function() {
-            overlay.style.opacity = "1";
-            modal.style.transform = "scale(1)";
-            modal.style.opacity = "1";
-        });
-    }
-
-    function closeModal(overlay, modal, onClose) {
-        overlay.style.transition = "opacity 200ms ease-in";
-        overlay.style.opacity = "0";
-        modal.style.transition = "all 200ms ease-in";
-        modal.style.transform = "scale(0.95)";
-        modal.style.opacity = "0";
-
-        if (typeof onClose === "function") {
-            onClose();
-        }
-
-        setTimeout(function() {
-            overlay.remove();
-        }, 200);
     }
 });
