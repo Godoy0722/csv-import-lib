@@ -39,7 +39,7 @@ msgid "plugins.importexport.csv.invalidNumberOfLabelsAndGalleys"
 msgstr "Galley files don't have the same amount as the labels. Please verify it for this row."
 
 msgid "plugins.importexport.csv.invalidGalleyFile"
-msgstr "Invalid galley file \"{$filename}\" for this submission."
+msgstr "Missing galley file \"{$filename}\" for this submission."
 
 msgid "plugins.importexport.csv.invalidNumberOfLabelsAndSupplementaryFiles"
 msgstr "Supplementary files don't have the same amount as the labels. Please verify it for this row."
