@@ -135,7 +135,7 @@ msgid "plugins.importexport.csv.dryModeFileSummary"
 msgstr "Result: {$passed} passed, {$failed} failed ({$total} total)"
 
 msgid "plugins.importexport.csv.dryModeGrandTotal"
-msgstr "--- Dry-mode complete: {$files} files, {$passed} passed, {$failed} failed ---"
+msgstr "--- Data Validation complete: {$files} files, {$passed} passed, {$failed} failed ---"
 
 msgid "plugins.importexport.csv.zipCorruptArchive"
 msgstr "Cannot open ZIP archive: \"{$path}\"."
