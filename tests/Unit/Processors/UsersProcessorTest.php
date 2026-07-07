@@ -566,4 +566,217 @@ class UsersProcessorTest extends BaseTestCase
         $this->assertMatchesRegularExpression('/^jdoe[a-z]{3}$/', $username);
         $this->assertGreaterThanOrEqual(2, $callCount);
     }
+
+    // ==================== update() Tests ====================
+
+    public function testUpdateSetsProfileFields(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('originaluser')
+            ->withEmail('old@example.com')
+            ->withGivenName('Old')
+            ->withFamilyName('Name')
+            ->build();
+        $existingUser->setAffiliation('Old Affil', 'en');
+        $existingUser->setCountry('BR');
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'firstname' => 'NewFirst',
+            'lastname' => 'NewLast',
+            'email' => 'new@example.com',
+            'affiliation' => 'New Affil',
+            'country' => 'US',
+        ]);
+
+        $result = UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals('NewFirst', $result->getGivenName('en'));
+        $this->assertEquals('NewLast', $result->getFamilyName('en'));
+        $this->assertEquals('New Affil', $result->getAffiliation('en'));
+        $this->assertEquals('US', $result->getCountry());
+        $this->assertEquals('new@example.com', $result->getEmail());
+    }
+
+    public function testUpdatePreservesUsername(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('originaluser')
+            ->build();
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'username' => 'differentuser',
+        ]);
+
+        UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals('originaluser', $existingUser->getUsername());
+    }
+
+    public function testUpdateSetsPasswordWhenProvided(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('testuser')
+            ->build();
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'tempPassword' => 'newpassword123',
+        ]);
+
+        UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertTrue(password_verify('newpassword123', $existingUser->getPassword()));
+        $this->assertTrue($existingUser->getMustChangePassword());
+    }
+
+    public function testUpdateSkipsPasswordWhenEmpty(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('testuser')
+            ->build();
+        $originalPassword = $existingUser->getPassword();
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'tempPassword' => '',
+        ]);
+
+        UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals($originalPassword, $existingUser->getPassword());
+    }
+
+    public function testUpdateSetsOrcidWhenValid(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('testuser')
+            ->build();
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'orcid' => '0000-0002-1825-0097',
+        ]);
+
+        UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals('https://orcid.org/0000-0002-1825-0097', $existingUser->getOrcid());
+    }
+
+    public function testUpdateSkipsOrcidWhenEmpty(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('testuser')
+            ->withOrcid('https://orcid.org/0000-0001-2345-6789')
+            ->build();
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'orcid' => '',
+        ]);
+
+        UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals('https://orcid.org/0000-0001-2345-6789', $existingUser->getOrcid());
+    }
+
+    public function testProcessDispatchesToUpdateWhenUserExistsByEmail(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(99)
+            ->withEmail('existing@example.com')
+            ->withUsername('existinguser')
+            ->build();
+
+        CachedEntities::$users['existing@example.com'] = $existingUser;
+        CachedEntities::$users['existinguser'] = $existingUser;
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(99)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'email' => 'existing@example.com',
+            'firstname' => 'Updated',
+        ]);
+
+        $result = UsersProcessor::process($data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals(99, $result->getId());
+        $this->assertEquals('Updated', $result->getGivenName('en'));
+    }
+
+    public function testProcessDispatchesToCreateWhenUserDoesNotExist(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $userRepoMock = $this->mockUserRepository();
+        $returnedUser = $this->createMockUser(['id' => 55]);
+        $userRepoMock->shouldReceive('add')->once()->andReturn(55);
+        $userRepoMock->shouldReceive('get')->with(55)->andReturn($returnedUser);
+
+        $data = $this->createUserDataObject([
+            'email' => 'newuser@example.com',
+            'username' => 'newuser',
+        ]);
+
+        $result = UsersProcessor::process($data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals(55, $result->getId());
+    }
 }

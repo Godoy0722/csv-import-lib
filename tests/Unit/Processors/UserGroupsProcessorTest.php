@@ -167,4 +167,126 @@ class UserGroupsProcessorTest extends BaseTestCase
 
         $this->assertTrue(true);
     }
+
+    // ==================== assignMissingOnly() Tests ====================
+
+    public function testAssignMissingOnlyAssignsNewRole(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $authorGroup = $this->createMockUserGroup(['id' => 10, 'name' => ['en' => 'Author']]);
+        CachedEntities::$userGroups[1] = [10 => $authorGroup];
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->once()
+            ->with(5, 10)
+            ->andReturn(false);
+
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->once()
+            ->with(5, 10);
+
+        UserGroupsProcessor::assignMissingOnly(['Author'], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
+
+    public function testAssignMissingOnlySkipsExistingRole(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $authorGroup = $this->createMockUserGroup(['id' => 10, 'name' => ['en' => 'Author']]);
+        CachedEntities::$userGroups[1] = [10 => $authorGroup];
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->once()
+            ->with(5, 10)
+            ->andReturn(true);
+
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->never();
+
+        UserGroupsProcessor::assignMissingOnly(['Author'], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
+
+    public function testAssignMissingOnlyMixedNewAndExisting(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $authorGroup = $this->createMockUserGroup(['id' => 10, 'name' => ['en' => 'Author']]);
+        $readerGroup = $this->createMockUserGroup(['id' => 11, 'name' => ['en' => 'Reader']]);
+        $reviewerGroup = $this->createMockUserGroup(['id' => 12, 'name' => ['en' => 'Reviewer']]);
+        CachedEntities::$userGroups[1] = [10 => $authorGroup, 11 => $readerGroup, 12 => $reviewerGroup];
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->with(5, 10)
+            ->andReturn(true);
+        $userGroupMock->shouldReceive('userInGroup')
+            ->with(5, 11)
+            ->andReturn(false);
+        $userGroupMock->shouldReceive('userInGroup')
+            ->with(5, 12)
+            ->andReturn(true);
+
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->once()
+            ->with(5, 11);
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->never()
+            ->with(5, 10);
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->never()
+            ->with(5, 12);
+
+        UserGroupsProcessor::assignMissingOnly(['Author', 'Reader', 'Reviewer'], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
+
+    public function testAssignMissingOnlySkipsNonMatchingRoles(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $authorGroup = $this->createMockUserGroup(['id' => 10, 'name' => ['en' => 'Author']]);
+        CachedEntities::$userGroups[1] = [10 => $authorGroup];
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->never();
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->never();
+
+        UserGroupsProcessor::assignMissingOnly(['NonExistentRole'], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
+
+    public function testAssignMissingOnlyWithEmptyRoles(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->never();
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->never();
+
+        UserGroupsProcessor::assignMissingOnly([], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
+
+    public function testAssignMissingOnlyMatchesRolesCaseInsensitively(): void
+    {
+        $userGroupMock = $this->mockUserGroupRepository();
+
+        $authorGroup = $this->createMockUserGroup(['id' => 10, 'name' => ['en' => 'Author']]);
+        CachedEntities::$userGroups[1] = [10 => $authorGroup];
+
+        $userGroupMock->shouldReceive('userInGroup')
+            ->once()
+            ->with(5, 10)
+            ->andReturn(false);
+        $userGroupMock->shouldReceive('assignUserToGroup')
+            ->once()
+            ->with(5, 10);
+
+        UserGroupsProcessor::assignMissingOnly(['author'], 5, 1, 'en');
+        $this->assertTrue(true);
+    }
 }
