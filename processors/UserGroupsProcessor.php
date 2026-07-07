@@ -21,11 +21,31 @@ use APP\plugins\importexport\csv\shared\cachedAttributes\CachedEntities;
 
 class UserGroupsProcessor
 {
+    /**
+     * Assign all given roles to a user. Used for new users.
+     */
     public static function process(array $roles, int $userId, int $contextId, string $locale)
     {
         foreach ($roles as $role) {
             $userGroup = CachedEntities::getCachedUserGroupByName($role, $contextId, $locale);
             if ($userGroup) {
+                Repo::userGroup()->assignUserToGroup($userId, $userGroup->id);
+            }
+        }
+    }
+
+    /**
+     * Assign only roles the user doesn't already have. Used for existing users.
+     * Uses Repo::userGroup()->userInGroup() to check existing assignments.
+     */
+    public static function assignMissingOnly(array $roles, int $userId, int $contextId, string $locale): void
+    {
+        foreach ($roles as $role) {
+            $userGroup = CachedEntities::getCachedUserGroupByName($role, $contextId, $locale);
+            if (!$userGroup) {
+                continue;
+            }
+            if (!Repo::userGroup()->userInGroup($userId, $userGroup->id)) {
                 Repo::userGroup()->assignUserToGroup($userId, $userGroup->id);
             }
         }
