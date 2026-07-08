@@ -33,21 +33,4 @@ class UserGroupsProcessor
             }
         }
     }
-
-    /**
-     * Assign only roles the user doesn't already have. Used for existing users.
-     * Uses Repo::userGroup()->userInGroup() to check existing assignments.
-     */
-    public static function assignMissingOnly(array $roles, int $userId, int $contextId, string $locale): void
-    {
-        foreach ($roles as $role) {
-            $userGroup = CachedEntities::getCachedUserGroupByName($role, $contextId, $locale);
-            if (!$userGroup) {
-                continue;
-            }
-            if (!Repo::userGroup()->userInGroup($userId, $userGroup->id)) {
-                Repo::userGroup()->assignUserToGroup($userId, $userGroup->id);
-            }
-        }
-    }
 }

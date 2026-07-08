@@ -78,11 +78,6 @@ class UsersProcessor
         $user->setEmail($data->email);
         $user->setCountry($data->country);
 
-        if (!empty($data->tempPassword)) {
-            $user->setPassword(Validation::encryptCredentials($user->getUsername(), $data->tempPassword));
-            $user->setMustChangePassword(true);
-        }
-
         if (!empty($data->orcid)) {
             $normalizedOrcid = OrcidHandler::normalize($data->orcid);
             if ($normalizedOrcid !== null) {
