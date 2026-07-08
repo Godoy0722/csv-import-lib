@@ -86,6 +86,8 @@ document.addEventListener("DOMContentLoaded", function() {
         html += summaryBadge(labels.filesProcessed, response.resultFilesProcessed, "#222222");
         html += summaryBadge(labels.totalRows, response.resultTotalRows, "#222222");
         html += summaryBadge(labels.successfulRows, response.resultSuccessfulRows, "#00B24E");
+        html += summaryBadge(labels.createdRows, response.resultCreatedRows || 0, "#006798");
+        html += summaryBadge(labels.updatedRows, response.resultUpdatedRows || 0, "#0082BF");
         html += summaryBadge(labels.failedRows, response.resultFailedRows, response.resultFailedRows > 0 ? "#D00A6C" : "#222222");
         html += "</div>";
 
@@ -122,6 +124,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (hasInvalidFiles) {
             html += "<p style='margin:0.75rem 0 0; color:#505050;'>" + labels.invalidFilesHint + "</p>";
         }
+        if (isUsers && (response.resultUpdatedRows || 0) > 0 && labels.updatedUsersExplanation) {
+            html += "<p style='margin:0.75rem 0 0; padding:0.5rem 0.75rem; background:#E6F2F8; border-left:3px solid #0082BF; border-radius:2px; color:#002C40; font-size:0.8125rem; line-height:1.4rem;'>" + labels.updatedUsersExplanation + "</p>";
+        }
         html += "</div>";
 
         return html;
@@ -141,8 +146,29 @@ document.addEventListener("DOMContentLoaded", function() {
         html += "=== " + escapeHtml(file.filename) + " ===";
         html += "</div>";
 
+        if (file.updatedUsers && file.updatedUsers.length > 0) {
+            html += "<div style='margin-top:0.5rem; border:1px solid #BBBBBB; overflow-x:auto;'>";
+            html += "<table style='width:100%; border-collapse:separate; border-spacing:0; font-family:monospace; font-size:0.75rem;'>";
+            html += "<thead><tr style='background:#FFFFFF;'>";
+            html += "<th style='padding:0.5rem 0.75rem; text-align:left; border-bottom:2px solid #BBBBBB; color:#01354F; font-weight:700;'>" + (labels.updatedUsersSection || "UPDATED USERS") + "</th>";
+            html += "<th style='padding:0.5rem 0.75rem; text-align:left; width:80px; border-bottom:2px solid #BBBBBB; color:#01354F; font-weight:700;'>STATUS</th>";
+            html += "</tr></thead><tbody>";
+
+            for (var k = 0; k < file.updatedUsers.length; k++) {
+                var email = file.updatedUsers[k];
+                var updatedRowBg = k % 2 === 1 ? "background:rgba(234,237,238,0.3);" : "";
+                html += "<tr style='" + updatedRowBg + "'>";
+                html += "<td style='padding:0.375rem 0.75rem; border-bottom:1px solid #BBBBBB; color:#222222;'>" + escapeHtml(email) + "</td>";
+                html += "<td style='padding:0.375rem 0.75rem; border-bottom:1px solid #BBBBBB; color:#006798; font-weight:700;'>UPDATED</td>";
+                html += "</tr>";
+            }
+
+            html += "</tbody></table>";
+            html += "</div>";
+        }
+
         if (file.errors && file.errors.length > 0) {
-            html += "<div style='border:1px solid #BBBBBB; border-top:none; overflow-x:auto;'>";
+            html += "<div style='margin-top:0.5rem; border:1px solid #BBBBBB; overflow-x:auto;'>";
             html += "<table style='width:100%; border-collapse:separate; border-spacing:0; font-family:monospace; font-size:0.75rem;'>";
             html += "<thead><tr style='background:#FFFFFF;'>";
             html += "<th style='padding:0.5rem 0.75rem; text-align:left; width:60px; border-bottom:2px solid #BBBBBB; color:#01354F; font-weight:700;'>ROW</th>";
@@ -165,10 +191,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         var passed = file.successful;
+        var created = file.created || (file.successful - (file.updated || 0));
+        var updated = file.updated || 0;
         var failed = file.failed;
         var total = file.rows;
-        html += "<div style='padding:0.5rem 0.75rem; font-family:monospace; font-size:0.75rem; border:1px solid #BBBBBB; border-top:" + (file.errors && file.errors.length > 0 ? "none" : "1px solid #BBBBBB") + "; border-radius:0 0 4px 4px; background:#FFFFFF;'>";
+        html += "<div style='padding:0.5rem 0.75rem; font-family:monospace; font-size:0.75rem; border:1px solid #BBBBBB; border-radius:0 0 4px 4px; background:#FFFFFF;'>";
         html += "Result: <span style='color:#00B24E; font-weight:700;'>" + passed + " passed</span>, ";
+        html += "<span style='color:#006798; font-weight:700;'>" + created + " created</span>, ";
+        html += "<span style='color:#0082BF; font-weight:700;'>" + updated + " updated</span>, ";
         html += "<span style='color:" + (failed > 0 ? "#D00A6C" : "#222222") + "; font-weight:700;'>" + failed + " failed</span>";
         html += " (" + total + " total)";
         html += "</div>";
