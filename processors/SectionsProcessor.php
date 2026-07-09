@@ -24,6 +24,10 @@ class SectionsProcessor
 {
 	public static function newSectionToPublication(object $data, int $contextId, Publication $publication): void
     {
+        if (empty($data->sectionTitle)) {
+            return;
+        }
+
         $section = Repo::section()->newDataObject();
 
         $section->setContextId($contextId);
