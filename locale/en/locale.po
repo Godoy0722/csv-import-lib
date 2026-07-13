@@ -257,6 +257,9 @@ msgstr "UPDATED USERS"
 msgid "plugins.importexport.csv.results.updatedUsersExplanation"
 msgstr "Users marked as updated were found by email. Profile data (name, affiliation, country, email, ORCID) was updated. Password and roles were left unchanged — only new users receive password and role assignments."
 
+msgid "plugins.importexport.csv.journalPathMismatch"
+msgstr "The CSV row's journalPath \"{$csvJournalPath}\" does not match the currently opened journal \"{$currentJournalPath}\". Rows must belong to the same journal context."
+
 msgid "plugins.importexport.csv.rowImportFailed"
 msgstr "Unexpected error while importing this row: {$message}"
 
