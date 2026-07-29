@@ -42,7 +42,7 @@ use APP\submissionFile\Repository as SubmissionFileRepository;
 use PKP\submissionFile\SubmissionFile;
 use PKP\tests\PKPTestCase;
 use PKP\user\DAO as UserDAO;
-use PKP\user\Repository as UserRepository;
+use APP\user\Repository as UserRepository;
 use PKP\user\User;
 use PKP\userGroup\Repository as UserGroupRepository;
 use PKP\userGroup\UserGroup;

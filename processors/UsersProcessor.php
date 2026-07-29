@@ -85,6 +85,11 @@ class UsersProcessor
             }
         }
 
+        if (!empty($data->tempPassword)) {
+            $user->setPassword(Validation::encryptCredentials($data->username ?? $user->getUsername(), $data->tempPassword));
+            $user->setMustChangePassword(true);
+        }
+
         Repo::user()->edit($user);
 
         return Repo::user()->get($user->getId());

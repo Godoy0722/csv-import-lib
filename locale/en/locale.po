@@ -260,6 +260,9 @@ msgstr "Users marked as updated were found by email. Profile data (name, affilia
 msgid "plugins.importexport.csv.contextPathMismatch"
 msgstr "The CSV row's {$contextType}Path \"{$csvContextPath}\" does not match the currently opened {$contextType} \"{$currentContextPath}\". Rows must belong to the same {$contextType} context."
 
+msgid "plugins.importexport.csv.invalidDateFormat"
+msgstr "Invalid date format for {$fieldName}. Expected format: YYYY-MM-DD (e.g., 2024-01-15)."
+
 msgid "plugins.importexport.csv.rowImportFailed"
 msgstr "Unexpected error while importing this row: {$message}"
 

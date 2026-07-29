@@ -572,6 +572,28 @@ class InvalidRowValidations
     }
 
     /**
+     * Validates a date string matches Y-m-d format.
+     * When required, empty dates throw an exception.
+     * When optional, empty dates pass through.
+     *
+     * @throws RowValidationException
+     */
+    public static function validateDateFormat(?string $date, string $fieldName, bool $required = true): void
+    {
+        if (empty($date)) {
+            if ($required) {
+                throw new RowValidationException(__('plugins.importexport.csv.invalidDateFormat', ['fieldName' => $fieldName]));
+            }
+            return;
+        }
+
+        $dateObj = \DateTime::createFromFormat('Y-m-d', $date);
+        if (!$dateObj || $dateObj->format('Y-m-d') !== $date) {
+            throw new RowValidationException(__('plugins.importexport.csv.invalidDateFormat', ['fieldName' => $fieldName]));
+        }
+    }
+
+    /**
      * Validates that section fields are either both filled or both empty.
      * If one is provided, both must be provided.
      *
