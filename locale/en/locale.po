@@ -263,6 +263,9 @@ msgstr "The CSV row's {$contextType}Path \"{$csvContextPath}\" does not match th
 msgid "plugins.importexport.csv.invalidDateFormat"
 msgstr "Invalid date format for {$fieldName}. Expected format: YYYY-MM-DD (e.g., 2024-01-15)."
 
+msgid "plugins.importexport.csv.duplicateDoi"
+msgstr "The DOI \"{$doi}\" already exists in this journal."
+
 msgid "plugins.importexport.csv.submissionFileProcessFinished"
 msgstr "Process for file \"{$filename}\" finished. {$processedRows} processed, {$failedRows} failed."
 

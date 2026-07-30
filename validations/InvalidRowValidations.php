@@ -605,4 +605,35 @@ class InvalidRowValidations
             throw new RowValidationException(__('plugins.importexport.csv.incompleteSectionFields'));
         }
     }
+
+    /**
+     * Validates that a DOI does not already exist in the journal (database or current import session).
+     * Empty DOIs pass through — DOI is optional.
+     *
+     * @param string|null $doi The raw DOI from the CSV row
+     * @param array<string,bool> $existingDois Preloaded DB DOIs keyed by normalized DOI
+     * @param array<string,bool> $importedDois DOIs already imported in this run
+     *
+     * @throws RowValidationException
+     */
+    public static function validateDoiNotDuplicate(?string $doi, array $existingDois, array $importedDois): void
+    {
+        if (empty(trim($doi ?? ''))) {
+            return;
+        }
+
+        $normalized = static::normalizeVorDoi($doi);
+
+        if ($normalized === null) {
+            return;
+        }
+
+        if (isset($importedDois[$normalized])) {
+            throw new RowValidationException(__('plugins.importexport.csv.duplicateDoi', ['doi' => $doi]));
+        }
+
+        if (isset($existingDois[$normalized])) {
+            throw new RowValidationException(__('plugins.importexport.csv.duplicateDoi', ['doi' => $doi]));
+        }
+    }
 }
