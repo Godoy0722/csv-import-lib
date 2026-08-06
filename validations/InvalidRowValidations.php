@@ -150,6 +150,43 @@ class InvalidRowValidations
     }
 
     /**
+     * Perform all necessary validations for HTML galleys.
+     *
+     * The first file in the semicolon-separated list must have an .html or .htm extension.
+     * All files must exist, be readable, and not escape the source directory.
+     *
+     * @throws RowValidationException
+     */
+    public static function validateHtmlGalleys(?string $htmlGalley, string $sourceDir): void
+    {
+        if (empty(trim($htmlGalley ?? ''))) {
+            return;
+        }
+
+        $htmlGalleyFiles = array_map('trim', explode(';', $htmlGalley));
+        $htmlGalleyFiles = array_filter($htmlGalleyFiles, fn(string $f) => $f !== '');
+
+        if (empty($htmlGalleyFiles)) {
+            return;
+        }
+
+        $firstFile = $htmlGalleyFiles[0];
+        $firstExtension = mb_strtolower(pathinfo($firstFile, PATHINFO_EXTENSION));
+
+        if (!in_array($firstExtension, ['html', 'htm'])) {
+            throw new RowValidationException(__('plugins.importexport.csv.invalidHtmlGalleyFirstFile', ['filename' => $firstFile]));
+        }
+
+        foreach ($htmlGalleyFiles as $file) {
+            static::validatePathWithinSourceDir($file, $sourceDir);
+            $filePath = "{$sourceDir}/{$file}";
+            if (!is_readable($filePath)) {
+                throw new RowValidationException(__('plugins.importexport.csv.invalidHtmlGalleyFile', ['filename' => $file]));
+            }
+        }
+    }
+
+    /**
      * Perform all necessary validations for supplementary files.
      *
      * @throws RowValidationException

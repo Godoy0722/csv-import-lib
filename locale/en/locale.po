@@ -272,3 +272,18 @@ msgstr "Process for file \"{$filename}\" finished. {$processedRows} processed, {
 msgid "plugins.importexport.csv.rowImportFailed"
 msgstr "Unexpected error while importing this row: {$message}"
 
+msgid "plugins.importexport.csv.invalidHtmlGalleyFirstFile"
+msgstr "The first file in htmlGalley must have an .html or .htm extension. Found: \"{$filename}\"."
+
+msgid "plugins.importexport.csv.invalidHtmlGalleyFile"
+msgstr "Missing HTML galley file \"{$filename}\" for this submission."
+
+msgid "plugins.importexport.csv.errorWhileSavingHtmlGalley"
+msgstr "An error occurred while saving the HTML galley file \"{$filename}\"."
+
+msgid "plugins.importexport.csv.errorWhileSavingHtmlDependentFile"
+msgstr "An error occurred while saving the HTML galley dependent file \"{$filename}\"."
+
+msgid "plugins.importexport.csv.errorWhileSanitizingHtmlGalley"
+msgstr "An error occurred while sanitizing the HTML galley file \"{$filename}\"."
+
