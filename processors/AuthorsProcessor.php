@@ -25,6 +25,14 @@ use PKP\user\User;
 
 class AuthorsProcessor
 {
+    /**
+     * Maps raw (trimmed) CSV author entries to the author IDs they produced,
+     * populated by process() and processMultiLocale() for the current run.
+     *
+     * @var array<string,int>
+     */
+    public static array $csvAuthorEntryToId = [];
+
     public static function process(
         object $data,
         string $contactEmail,
@@ -57,6 +65,7 @@ class AuthorsProcessor
             static::updateAuthorFromCsv($author, $givenName, $familyName, $orcid, $affiliation, $biography, $data->locale, false);
 
             $authorId = Repo::author()->add($author);
+            static::$csvAuthorEntryToId[$authorString] = $authorId;
 
             if ($index === 0 && is_null($usernameUser)) {
                 PublicationProcessor::updatePrimaryContactId($publication, $authorId);
@@ -240,13 +249,14 @@ class AuthorsProcessor
             );
 
             $existingAuthor ? Repo::author()->dao->update($author) : Repo::author()->add($author);
+            static::$csvAuthorEntryToId[$authorString] = $author->getId();
         }
     }
 
     /**
      * Parse author string components
      */
-    private static function parseAuthorString(string $authorString, string $contactEmail): array
+    public static function parseAuthorString(string $authorString, string $contactEmail): array
     {
         $authorParts = array_map('trim', explode(',', $authorString));
         $givenName = $authorParts[0] ?? '';
