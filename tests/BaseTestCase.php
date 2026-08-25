@@ -116,6 +116,7 @@ abstract class BaseTestCase extends PKPTestCase
             'genreIds' => $cachedEntitiesClass::$genreIds,
             'categories' => $cachedEntitiesClass::$categories,
             'sections' => $cachedEntitiesClass::$sections,
+            'sectionsByContext' => $cachedEntitiesClass::$sectionsByContext,
             'users' => $cachedEntitiesClass::$users,
         ];
 
@@ -125,6 +126,7 @@ abstract class BaseTestCase extends PKPTestCase
         $cachedEntitiesClass::$genreIds = [];
         $cachedEntitiesClass::$categories = [];
         $cachedEntitiesClass::$sections = [];
+        $cachedEntitiesClass::$sectionsByContext = [];
         $cachedEntitiesClass::$users = [];
     }
 
@@ -140,6 +142,7 @@ abstract class BaseTestCase extends PKPTestCase
         $cachedEntitiesClass::$genreIds = $this->cachedEntitiesBackup['genreIds'] ?? [];
         $cachedEntitiesClass::$categories = $this->cachedEntitiesBackup['categories'] ?? [];
         $cachedEntitiesClass::$sections = $this->cachedEntitiesBackup['sections'] ?? [];
+        $cachedEntitiesClass::$sectionsByContext = $this->cachedEntitiesBackup['sectionsByContext'] ?? [];
         $cachedEntitiesClass::$users = $this->cachedEntitiesBackup['users'] ?? [];
     }
 

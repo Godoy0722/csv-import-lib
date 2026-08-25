@@ -43,6 +43,9 @@ class CachedEntities
     /** @var array<string,Section|null> */
     static array $sections = [];
 
+    /** @var array<int,array<int,Section>> Sections of a context, keyed by section ID. Absent key means "not loaded yet". */
+    static array $sectionsByContext = [];
+
     /** @var array<string,User|null> */
     static array $users = [];
 
@@ -54,6 +57,7 @@ class CachedEntities
         static::$genreIds = [];
         static::$categories = [];
         static::$sections = [];
+        static::$sectionsByContext = [];
         static::$users = [];
     }
 
@@ -158,23 +162,26 @@ class CachedEntities
         return null;
     }
 
-    /** Retrieves a cached Section by sectionTitle, sectionAbbrev, and contextId. Returns null if an error occurs. */
+    /**
+     * Retrieves a Section of the context matching the fields the CSV row provides.
+     * A row may carry the title, the abbreviation or both; whichever it carries has to match.
+     * When more than one section matches, the one with the lowest ID wins.
+     */
     static function getCachedSection(string $sectionTitle, string $sectionAbbrev, string $locale, int $contextId): ?Section
     {
-        $customSectionKey = $sectionTitle . '_' . mb_strtoupper(trim($sectionAbbrev));
+        $sectionTitle = static::normalizeSectionTitle($sectionTitle);
+        $sectionAbbrev = static::normalizeSectionAbbrev($sectionAbbrev);
 
-        if (isset(static::$sections[$customSectionKey])) {
-            return static::$sections[$customSectionKey];
+        if ($sectionTitle === '' && $sectionAbbrev === '') {
+            return null;
         }
 
-        $sections = Repo::section()->getCollector()
-            ->filterByContextIds([$contextId])
-            ->getMany();
+        foreach (static::getSectionsForContext($contextId) as $section) {
+            $titleMatches = $sectionTitle === '' || static::normalizeSectionTitle($section->getTitle($locale)) === $sectionTitle;
+            $abbrevMatches = $sectionAbbrev === '' || static::normalizeSectionAbbrev($section->getAbbrev($locale)) === $sectionAbbrev;
 
-        foreach ($sections as $section) {
-            if ($section->getAbbrev($locale) === $sectionAbbrev && $section->getTitle($locale) === $sectionTitle) {
-                static::$sections["sectionId_{$section->getId()}"] = $section;
-                return static::$sections[$customSectionKey] = $section;
+            if ($titleMatches && $abbrevMatches) {
+                return $section;
             }
         }
 
@@ -193,13 +200,59 @@ class CachedEntities
             return null;
         }
 
-        $sectionTitle = $section->getTitle($locale);
-        $sectionAbbrev = $section->getAbbrev($locale);
-        $customSectionKey = $sectionTitle . '_' . mb_strtoupper(trim($sectionAbbrev));
-
-        static::$sections["sectionId_{$baseSectionId}"] = $section;
-        static::$sections[$customSectionKey] = $section;
+        static::indexSection($section, $contextId);
 
         return $section;
+    }
+
+    /** Makes a Section reachable by the lookups without hitting the database again. */
+    public static function indexSection(Section $section, int $contextId): void
+    {
+        static::$sections["sectionId_{$section->getId()}"] = $section;
+
+        // Only extend an already loaded list: a list loaded later reads the section from the database anyway.
+        if (isset(static::$sectionsByContext[$contextId])) {
+            static::$sectionsByContext[$contextId][$section->getId()] = $section;
+            ksort(static::$sectionsByContext[$contextId]);
+        }
+    }
+
+    /**
+     * Every section of the context, keyed and ordered by ID. Read from the database once per context.
+     *
+     * @return array<int,Section>
+     */
+    private static function getSectionsForContext(int $contextId): array
+    {
+        if (isset(static::$sectionsByContext[$contextId])) {
+            return static::$sectionsByContext[$contextId];
+        }
+
+        $sections = Repo::section()->getCollector()
+            ->filterByContextIds([$contextId])
+            ->getMany();
+
+        static::$sectionsByContext[$contextId] = [];
+
+        foreach ($sections as $section) {
+            static::$sections["sectionId_{$section->getId()}"] = $section;
+            static::$sectionsByContext[$contextId][$section->getId()] = $section;
+        }
+
+        ksort(static::$sectionsByContext[$contextId]);
+
+        return static::$sectionsByContext[$contextId];
+    }
+
+    /** Titles are compared as stored, minus the surrounding whitespace the CSV may carry. */
+    private static function normalizeSectionTitle(string|array|null $sectionTitle): string
+    {
+        return is_string($sectionTitle) ? trim($sectionTitle) : '';
+    }
+
+    /** Abbreviations are stored uppercased, so comparisons uppercase both sides. */
+    private static function normalizeSectionAbbrev(string|array|null $sectionAbbrev): string
+    {
+        return is_string($sectionAbbrev) ? mb_strtoupper(trim($sectionAbbrev)) : '';
     }
 }

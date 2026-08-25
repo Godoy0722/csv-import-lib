@@ -116,4 +116,82 @@ class InvalidRowValidationsTest extends BaseTestCase
         $this->expectException(RowValidationException::class);
         InvalidRowValidations::validateDateFormat('', 'someField');
     }
+
+    /**
+     * A row carrying only sectionTitle identifies the section, so it must pass.
+     */
+    public function testValidateSectionFieldsWithOnlyTitle(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => 'Articles',
+            'sectionAbbrev' => '',
+        ]));
+    }
+
+    /**
+     * A row carrying only sectionAbbrev identifies the section, so it must pass.
+     */
+    public function testValidateSectionFieldsWithOnlyAbbrev(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => '',
+            'sectionAbbrev' => 'ART',
+        ]));
+    }
+
+    /**
+     * Both fields filled remains valid.
+     */
+    public function testValidateSectionFieldsWithBothFields(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => 'Articles',
+            'sectionAbbrev' => 'ART',
+        ]));
+    }
+
+    /**
+     * Only a row missing both fields is invalid.
+     */
+    public function testValidateSectionFieldsWithBothEmpty(): void
+    {
+        $this->expectException(RowValidationException::class);
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => '',
+            'sectionAbbrev' => '',
+        ]));
+    }
+
+    /**
+     * Whitespace carries no section information, so it counts as empty.
+     */
+    public function testValidateSectionFieldsWithWhitespaceOnly(): void
+    {
+        $this->expectException(RowValidationException::class);
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => '   ',
+            'sectionAbbrev' => "\t",
+        ]));
+    }
+
+    /**
+     * Missing properties are treated as empty rather than raising a PHP warning.
+     */
+    public function testValidateSectionFieldsWithNullFields(): void
+    {
+        $this->expectException(RowValidationException::class);
+
+        InvalidRowValidations::validateSectionFields($this->createSubmissionDataObject([
+            'sectionTitle' => null,
+            'sectionAbbrev' => null,
+        ]));
+    }
 }

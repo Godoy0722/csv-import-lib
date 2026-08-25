@@ -631,14 +631,17 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates that section fields are either both filled or both empty.
-     * If one is provided, both must be provided.
+     * Validates that the row identifies a section.
+     * sectionTitle and sectionAbbrev form a group: at least one of them must be filled.
      *
      * @throws RowValidationException
      */
     public static function validateSectionFields(object $data): void
     {
-        if (empty($data->sectionTitle) xor empty($data->sectionAbbrev)) {
+        $sectionTitle = trim($data->sectionTitle ?? '');
+        $sectionAbbrev = trim($data->sectionAbbrev ?? '');
+
+        if ($sectionTitle === '' && $sectionAbbrev === '') {
             throw new RowValidationException(__('plugins.importexport.csv.incompleteSectionFields'));
         }
     }

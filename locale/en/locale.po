@@ -117,7 +117,7 @@ msgid "plugins.importexport.csv.invalidGalleyViewValue"
 msgstr "Invalid galley view value \"{$value}\". Each galley view must be empty or a non-negative integer."
 
 msgid "plugins.importexport.csv.incompleteSectionFields"
-msgstr "Both sectionTitle and sectionAbbrev must be provided together. If one is filled, the other must also be filled."
+msgstr "At least one of sectionTitle or sectionAbbrev must be provided for this row."
 
 msgid "plugins.importexport.csv.couldNotOpenFile"
 msgstr "Could not read file: \"{$filePath}\". Error: \"{$errorMessage}\"."
