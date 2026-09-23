@@ -52,8 +52,6 @@ class PublicationProcessor
         /** @var Publication */
         $submissionPublication = $submission->getCurrentPublication();
 
-        $submissionPublication->setData('copyrightNotice', $context->getLocalizedData('copyrightNotice', $data->locale));
-
         if (!empty($data->references)) {
             $referencesString = static::getReferencesContent($data->references, $sourceDir);
 
@@ -205,14 +203,13 @@ class PublicationProcessor
      * Create a new publication version by copying base publication data.
      * Bypasses Repo::publication()->version() to avoid CLI context dependency.
      */
-    public static function createPublicationVersionCommons(Publication $basePublication, object $data, Context $context): Publication
+    public static function createPublicationVersionCommons(Publication $basePublication, object $data): Publication
     {
         $newPublication = Repo::publication()->newDataObject();
         $newPublication->setData('submissionId', $basePublication->getData('submissionId'));
         $newPublication->setData('version', (int)$data->version);
         $newPublication->setData('status', Submission::STATUS_PUBLISHED);
         $newPublication->setData('datePublished', null);
-        $newPublication->setData('copyrightNotice', $context->getLocalizedData('copyrightNotice', $data->locale));
         $newPublication->setData('authors', []);
         $newPublication->setData('primaryContactId', null);
         $newPublication->stampModified();
@@ -240,13 +237,12 @@ class PublicationProcessor
     }
 
     /**
-     * Apply shared multi-locale logic: add localized/non-localized fields and copyright notice
+     * Apply shared multi-locale logic: add localized and non-localized fields
      * for a new locale to an existing publication. Subclasses provide the field maps.
      */
     public static function processMultiLocalePublicationCommons(
         Publication $publication,
         object $data,
-        Context $context,
         array $localizedFields,
         array $nonLocalizedFields,
     ): Publication
@@ -264,7 +260,6 @@ class PublicationProcessor
             }
         }
 
-        $publication->setData('copyrightNotice', $context->getLocalizedData('copyrightNotice', $data->locale));
         Repo::publication()->dao->update($publication);
 
         return $publication;
