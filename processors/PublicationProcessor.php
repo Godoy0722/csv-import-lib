@@ -62,22 +62,17 @@ class PublicationProcessor
             }
         }
 
-        $copyrightHolder = $data->copyrightHolder
-            ?? $submission->_getContextLicenseFieldValue(null, Submission::PERMISSIONS_FIELD_COPYRIGHT_HOLDER, $submissionPublication);
-        $copyrightYear = $data->copyrightYear ?? $submission->_getContextLicenseFieldValue(
-            null,
-            Submission::PERMISSIONS_FIELD_COPYRIGHT_YEAR,
-            $submissionPublication
-        );
-        $licenseUrl = $data->licenseUrl ?? $submission->_getContextLicenseFieldValue(
-            null,
-            Submission::PERMISSIONS_FIELD_LICENSE_URL,
-            $submissionPublication
-        );
+        if (!empty($data->copyrightHolder)) {
+            $submissionPublication->setData('copyrightHolder', $data->copyrightHolder, $data->locale);
+        }
 
-        $submissionPublication->setData('copyrightHolder', $copyrightHolder, $data->locale);
-        $submissionPublication->setData('copyrightYear', $copyrightYear);
-        $submissionPublication->setData('licenseUrl', $licenseUrl);
+        if (!empty($data->copyrightYear)) {
+            $submissionPublication->setData('copyrightYear', $data->copyrightYear);
+        }
+
+        if (!empty($data->licenseUrl)) {
+            $submissionPublication->setData('licenseUrl', $data->licenseUrl);
+        }
 
         if (!empty($data->doi)) {
             $submissionPublication->setStoredPubId('doi', $data->doi);

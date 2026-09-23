@@ -67,8 +67,7 @@ class UsersProcessor
 
     /**
      * Update an existing user from CSV data.
-     * Only sets password if tempPassword is non-empty.
-     * Username is never changed for existing users.
+     * Username and password are never changed for existing users.
      */
     public static function update(User $user, object $data, string $locale): User
     {
