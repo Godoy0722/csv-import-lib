@@ -240,7 +240,7 @@ msgid "plugins.importexport.csv.ExecutedInNSeconds"
 msgstr "Executed in: {$seconds} seconds.\n"
 
 msgid "plugins.importexport.csv.form.userImportHelp"
-msgstr "<b>Users:</b> For user imports, you can upload a single CSV file directly without zipping. If you have multiple CSV files, bundle them into a ZIP archive following the same structure rules described above."
+msgstr "You can upload a single users CSV, or a ZIP when you have more than one file. <a href=\"https://github.com/Godoy0722/csvImportPluginDocs/blob/main/docs/csv-format.md#import-file-structure\" target=\"_blank\" rel=\"noopener noreferrer\">Click here to see how to create the ZIP file</a>. <a href=\"https://github.com/Godoy0722/csvImportPluginDocs/blob/main/docs/csv-format.md#users-csv-format\" target=\"_blank\" rel=\"noopener noreferrer\">Click here to see how to fill the CSV file</a>."
 
 msgid "plugins.importexport.csv.userUpdated"
 msgstr "User \"{$email}\" updated."
