@@ -27,11 +27,26 @@ class InvalidRowValidationsTest extends BaseTestCase
      */
     public function testValidateDateFormatWithValidFormat(): void
     {
-        $this->expectNotToPerformAssertions();
+        $this->assertSame('2024-01-15', InvalidRowValidations::validateDateFormat('2024-01-15', 'datePublished', true));
+        $this->assertSame('2023-12-31', InvalidRowValidations::validateDateFormat('2023-12-31', 'issuePublicationDate', false));
+        $this->assertSame('2020-02-29', InvalidRowValidations::validateDateFormat('2020-02-29', 'datePublished', true));
+    }
 
-        InvalidRowValidations::validateDateFormat('2024-01-15', 'datePublished', true);
-        InvalidRowValidations::validateDateFormat('2023-12-31', 'issuePublicationDate', false);
-        InvalidRowValidations::validateDateFormat('2020-02-29', 'datePublished', true); // leap year
+    /**
+     * DD/MM/YYYY is accepted and stored as YYYY-MM-DD.
+     */
+    public function testValidateDateFormatConvertsDayMonthYear(): void
+    {
+        $this->assertSame('2024-01-15', InvalidRowValidations::validateDateFormat('15/01/2024', 'datePublished', true));
+    }
+
+    /**
+     * A calendar date that does not exist is rejected in either format.
+     */
+    public function testValidateDateFormatRejectsImpossibleDayMonthYear(): void
+    {
+        $this->expectException(RowValidationException::class);
+        InvalidRowValidations::validateDateFormat('31/02/2024', 'datePublished', true);
     }
 
     /**
@@ -193,5 +208,25 @@ class InvalidRowValidationsTest extends BaseTestCase
             'sectionTitle' => null,
             'sectionAbbrev' => null,
         ]));
+    }
+
+    /**
+     * A filled author email must be a valid address, or the row is rejected.
+     */
+    public function testValidateAuthorsRejectsInvalidEmail(): void
+    {
+        $this->expectException(RowValidationException::class);
+
+        InvalidRowValidations::validateAuthors('Maria,Silva,not-an-email,University of Somewhere');
+    }
+
+    /**
+     * An omitted author email is not validated. The journal contact email is applied later.
+     */
+    public function testValidateAuthorsSkipsEmptyEmail(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateAuthors('Maria,Silva,,University of Somewhere;John,Doe,john@example.com');
     }
 }

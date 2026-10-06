@@ -76,6 +76,42 @@ class InvalidRowValidations
     }
 
     /**
+     * Validates emails filled in the authors column.
+     * An empty author email is left for the journal contact fallback and is not checked.
+     *
+     * @throws RowValidationException
+     */
+    public static function validateAuthors(?string $authors): void
+    {
+        if (empty($authors)) {
+            return;
+        }
+
+        foreach (array_map('trim', explode(';', $authors)) as $index => $authorString) {
+            if ($authorString === '') {
+                continue;
+            }
+
+            $authorParts = array_map('trim', explode(',', $authorString));
+            $capturedEmail = $authorParts[2] ?? '';
+
+            if ($capturedEmail === '') {
+                continue;
+            }
+
+            if (!filter_var($capturedEmail, FILTER_VALIDATE_EMAIL)) {
+                $authorName = trim(($authorParts[0] ?? '') . ' ' . ($authorParts[1] ?? ''));
+
+                throw new RowValidationException(__('plugins.importexport.csv.invalidAuthorEmail', [
+                    'email' => $capturedEmail,
+                    'authorName' => $authorName !== '' ? $authorName : (string) ($index + 1),
+                    'authorIndex' => $index + 1,
+                ]));
+            }
+        }
+    }
+
+    /**
      * Validates whether the CSV row contains all fields.
      *
      * @throws RowValidationException
@@ -609,25 +645,47 @@ class InvalidRowValidations
     }
 
     /**
-     * Validates a date string matches Y-m-d format.
-     * When required, empty dates throw an exception.
-     * When optional, empty dates pass through.
+     * Accepts Y-m-d, or d/m/Y which is converted to Y-m-d.
+     * Empty values pass only when the field is optional.
      *
      * @throws RowValidationException
      */
-    public static function validateDateFormat(?string $date, string $fieldName, bool $required = true): void
+    public static function validateDateFormat(?string $date, string $fieldName, bool $required = true): ?string
     {
-        if (empty($date)) {
+        $date = trim((string) $date);
+
+        if ($date === '') {
             if ($required) {
                 throw new RowValidationException(__('plugins.importexport.csv.invalidDateFormat', ['fieldName' => $fieldName]));
             }
-            return;
+
+            return null;
         }
 
-        $dateObj = \DateTime::createFromFormat('Y-m-d', $date);
-        if (!$dateObj || $dateObj->format('Y-m-d') !== $date) {
+        $normalized = static::convertCsvDate($date);
+        if ($normalized === null) {
             throw new RowValidationException(__('plugins.importexport.csv.invalidDateFormat', ['fieldName' => $fieldName]));
         }
+
+        return $normalized;
+    }
+
+    /**
+     * Converts a CSV date to Y-m-d. Accepts Y-m-d and d/m/Y.
+     */
+    private static function convertCsvDate(string $date): ?string
+    {
+        foreach (['Y-m-d', 'd/m/Y'] as $format) {
+            $dateObj = \DateTime::createFromFormat('!' . $format, $date);
+            $errors = \DateTime::getLastErrors();
+            $hasErrors = is_array($errors) && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0);
+
+            if ($dateObj && !$hasErrors) {
+                return $dateObj->format('Y-m-d');
+            }
+        }
+
+        return null;
     }
 
     /**

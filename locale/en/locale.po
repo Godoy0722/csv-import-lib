@@ -101,6 +101,9 @@ msgstr "User already exists with username \"{$username}\"."
 msgid "plugins.importexport.csv.userAlreadyExistsWithEmail"
 msgstr "User already exists with email \"{$email}\"."
 
+msgid "plugins.importexport.csv.invalidAuthorEmail"
+msgstr "Invalid email \"{$email}\" for author {$authorIndex} (\"{$authorName}\") in the authors column. The third value of each author must be a valid email, or empty to use the journal contact email."
+
 msgid "plugins.importexport.csv.errorWhileCreatingPublication"
 msgstr "Error while creating publication."
 
@@ -261,7 +264,7 @@ msgid "plugins.importexport.csv.contextPathMismatch"
 msgstr "The CSV row's {$contextType}Path \"{$csvContextPath}\" does not match the currently opened {$contextType} \"{$currentContextPath}\". Rows must belong to the same {$contextType} context."
 
 msgid "plugins.importexport.csv.invalidDateFormat"
-msgstr "Invalid date format for {$fieldName}. Expected format: YYYY-MM-DD (e.g., 2024-01-15)."
+msgstr "Invalid date format for {$fieldName}. Use YYYY-MM-DD (for example, 2024-01-15) or DD/MM/YYYY (for example, 15/01/2024)."
 
 msgid "plugins.importexport.csv.submissionFileProcessFinished"
 msgstr "Process for file \"{$filename}\" finished. {$processedRows} processed, {$failedRows} failed."
