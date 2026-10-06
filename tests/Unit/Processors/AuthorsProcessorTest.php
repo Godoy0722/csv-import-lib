@@ -300,6 +300,33 @@ class AuthorsProcessorTest extends BaseTestCase
         $this->assertEquals('', $result[4]);
     }
 
+    public function testParseAuthorStringKeepsCommasInsideQuotedFields(): void
+    {
+        $result = AuthorsProcessor::parseAuthorString(
+            'Maria,Santos,maria.santos@cs.ulisboa.pt,,"Technical University of Lisbon, Department of Computer Science","Studies forecasting, including LSTM models."',
+            'contact@example.com'
+        );
+
+        $this->assertSame('Maria', $result[0]);
+        $this->assertSame('Santos', $result[1]);
+        $this->assertSame('maria.santos@cs.ulisboa.pt', $result[2]);
+        $this->assertSame('', $result[3]);
+        $this->assertSame('Technical University of Lisbon, Department of Computer Science', $result[4]);
+        $this->assertSame('Studies forecasting, including LSTM models.', $result[5]);
+    }
+
+    public function testSplitAuthorEntriesKeepsSemicolonInsideQuotedFields(): void
+    {
+        $entries = AuthorsProcessor::splitAuthorEntries(
+            'Maria,Santos,maria@x.pt,,,"Bio; more";Robert,Chen,rob@x.pt'
+        );
+
+        $this->assertSame([
+            'Maria,Santos,maria@x.pt,,,"Bio; more"',
+            'Robert,Chen,rob@x.pt',
+        ], $entries);
+    }
+
     public function testUpdateAuthorFromCsvSetsNames(): void
     {
         $this->mockAffiliationRepository();

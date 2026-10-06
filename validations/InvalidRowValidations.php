@@ -18,6 +18,7 @@ namespace APP\plugins\importexport\csv\shared\validations;
 
 use APP\plugins\importexport\csv\shared\cachedAttributes\CachedEntities;
 use APP\plugins\importexport\csv\shared\exceptions\RowValidationException;
+use APP\plugins\importexport\csv\shared\processors\AuthorsProcessor;
 use APP\plugins\importexport\csv\shared\processors\FundersProcessor;
 use APP\publication\Publication;
 use PKP\context\Context;
@@ -87,20 +88,19 @@ class InvalidRowValidations
             return;
         }
 
-        foreach (array_map('trim', explode(';', $authors)) as $index => $authorString) {
+        foreach (AuthorsProcessor::splitAuthorEntries($authors) as $index => $authorString) {
             if ($authorString === '') {
                 continue;
             }
 
-            $authorParts = array_map('trim', explode(',', $authorString));
-            $capturedEmail = $authorParts[2] ?? '';
+            [$givenName, $familyName, $capturedEmail] = AuthorsProcessor::parseAuthorString($authorString, '');
 
             if ($capturedEmail === '') {
                 continue;
             }
 
             if (!filter_var($capturedEmail, FILTER_VALIDATE_EMAIL)) {
-                $authorName = trim(($authorParts[0] ?? '') . ' ' . ($authorParts[1] ?? ''));
+                $authorName = trim($givenName . ' ' . $familyName);
 
                 throw new RowValidationException(__('plugins.importexport.csv.invalidAuthorEmail', [
                     'email' => $capturedEmail,

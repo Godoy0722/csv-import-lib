@@ -229,4 +229,16 @@ class InvalidRowValidationsTest extends BaseTestCase
 
         InvalidRowValidations::validateAuthors('Maria,Silva,,University of Somewhere;John,Doe,john@example.com');
     }
+
+    /**
+     * A comma inside a quoted name must not be treated as the email field.
+     */
+    public function testValidateAuthorsAcceptsQuotedCommaBeforeEmail(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateAuthors(
+            '"Maria, Ana",Santos,maria.santos@cs.ulisboa.pt,,"Technical University of Lisbon, Department of Computer Science"'
+        );
+    }
 }

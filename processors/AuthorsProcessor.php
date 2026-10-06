@@ -47,7 +47,7 @@ class AuthorsProcessor
             return;
         }
 
-        $authorsString = array_map('trim', explode(';', $data->authors));
+        $authorsString = static::splitAuthorEntries((string) $data->authors);
 
         foreach ($authorsString as $index => $authorString) {
             [$givenName, $familyName, $emailAddress, $orcid, $affiliation, $biography] = static::parseAuthorString($authorString, $contactEmail);
@@ -210,7 +210,7 @@ class AuthorsProcessor
             return; // No new author data to add
         }
 
-        $authorsString = array_map('trim', explode(';', $data->authors));
+        $authorsString = static::splitAuthorEntries((string) $data->authors);
         $existingAuthors = $publication->getData('authors') ?: [];
 
         if (empty($existingAuthors)) {
@@ -254,11 +254,22 @@ class AuthorsProcessor
     }
 
     /**
-     * Parse author string components
+     * Split the authors cell into entries. A semicolon inside quotes stays in that entry.
+     *
+     * @return string[]
+     */
+    public static function splitAuthorEntries(string $authors): array
+    {
+        return static::splitRespectingQuotes($authors, ';', false);
+    }
+
+    /**
+     * Parse one author entry: Given,Family,Email,ORCID,Affiliation,Biography.
+     * Commas inside quotes stay in that field.
      */
     public static function parseAuthorString(string $authorString, string $contactEmail): array
     {
-        $authorParts = array_map('trim', explode(',', $authorString));
+        $authorParts = static::splitRespectingQuotes($authorString, ',', true);
         $givenName = $authorParts[0] ?? '';
         $familyName = $authorParts[1] ?? '';
         $emailAddress = $authorParts[2] ?? '';
@@ -271,6 +282,42 @@ class AuthorsProcessor
         }
 
         return [$givenName, $familyName, $emailAddress, $orcid, $affiliation, $biography];
+    }
+
+    /**
+     * Split on a delimiter without breaking quoted regions.
+     * Quotes may start mid-field, which str_getcsv does not handle for this author format.
+     *
+     * @return string[]
+     */
+    private static function splitRespectingQuotes(string $input, string $delimiter, bool $stripQuotes = false): array
+    {
+        $parts = [];
+        $current = '';
+        $inQuotes = false;
+        $length = strlen($input);
+
+        for ($i = 0; $i < $length; $i++) {
+            if ($input[$i] === '"') {
+                $inQuotes = !$inQuotes;
+                if (!$stripQuotes) {
+                    $current .= $input[$i];
+                }
+                continue;
+            }
+
+            if (!$inQuotes && $input[$i] === $delimiter) {
+                $parts[] = trim($current);
+                $current = '';
+                continue;
+            }
+
+            $current .= $input[$i];
+        }
+
+        $parts[] = trim($current);
+
+        return $parts;
     }
 
     /**
