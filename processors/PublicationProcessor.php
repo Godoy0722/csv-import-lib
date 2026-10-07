@@ -260,6 +260,10 @@ class PublicationProcessor
             }
         }
 
+        if (!empty($data->doi) && empty($publication->getData('doiId'))) {
+            $publication->setStoredPubId('doi', trim($data->doi));
+        }
+
         Repo::publication()->dao->update($publication);
 
         return $publication;
