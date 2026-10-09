@@ -21,6 +21,7 @@ use APP\issue\Repository as IssueRepository;
 use APP\plugins\importexport\csv\classes\cachedAttributes\CachedEntities;
 use APP\plugins\importexport\csv\classes\processors\IssueProcessor;
 use APP\plugins\importexport\csv\shared\tests\BaseTestCase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -119,9 +120,10 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
     }
 
     /**
-     * When issuePublicationDate is empty, Issue should fall back to Core::getCurrentDate().
+     * When issuePublicationDate is empty, creation leaves the date unset so it can
+     * be filled later from the most recent article datePublished in the issue.
      */
-    public function testIssueFallsBackToCurrentDateWhenIssuePublicationDateIsEmpty(): void
+    public function testIssueDateStaysEmptyWhenIssuePublicationDateIsEmpty(): void
     {
         $data = (object)[
             'locale' => 'en',
@@ -133,8 +135,7 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
             'issuePublicationDate' => '',
         ];
 
-        $currentDate = Core::getCurrentDate();
-        $datePublished = null;
+        $datePublished = 'sentinel';
         $mock = $this->createIssueRepositoryMock();
         $mock->shouldReceive('newDataObject')->andReturnUsing(function () use (&$datePublished) {
             $issue = Mockery::mock(Issue::class)->makePartial();
@@ -160,7 +161,84 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
 
         IssueProcessor::process(1, $data);
 
-        $this->assertEquals($currentDate, $datePublished,
-            'Issue should fall back to current date when issuePublicationDate is empty');
+        $this->assertEmpty($datePublished,
+            'Issue should be created without a date when issuePublicationDate is empty');
+    }
+
+    /**
+     * Issues imported without issuePublicationDate take the latest article datePublished.
+     */
+    public function testFillMissingIssueDatesUsesMostRecentArticleDate(): void
+    {
+        $this->beginDatabaseTransaction();
+        try {
+            $issueId = 990001;
+            DB::table('publications')->insert([
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2019-04-01', 'status' => 3, 'seq' => 0],
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2021-08-20', 'status' => 3, 'seq' => 0],
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2020-01-15', 'status' => 3, 'seq' => 0],
+            ]);
+
+            $issue = new Issue();
+            $issue->setId($issueId);
+
+            $saved = null;
+            $mock = $this->createIssueRepositoryMock();
+            $mock->shouldReceive('edit')->once()->andReturnUsing(function ($edited) use (&$saved) {
+                $saved = $edited->getDatePublished();
+            });
+
+            IssueProcessor::fillMissingIssueDates([
+                ['issue' => $issue, 'journalId' => 1],
+            ]);
+
+            $this->assertSame('2021-08-20', substr((string) $saved, 0, 10));
+        } finally {
+            $this->rollbackDatabaseTransaction();
+        }
+    }
+
+    /**
+     * An explicit issuePublicationDate is left unchanged.
+     */
+    public function testFillMissingIssueDatesKeepsExplicitIssueDate(): void
+    {
+        $issue = new Issue();
+        $issue->setId(1);
+        $issue->setDatePublished('2018-01-01');
+
+        $mock = $this->createIssueRepositoryMock();
+        $mock->shouldReceive('edit')->never();
+
+        IssueProcessor::fillMissingIssueDates([
+            ['issue' => $issue, 'journalId' => 1],
+        ]);
+
+        $this->assertSame('2018-01-01', $issue->getDatePublished());
+    }
+
+    /**
+     * When the issue has no article dates, fall back to the import date.
+     */
+    public function testFillMissingIssueDatesFallsBackToCurrentDateWhenNoArticleDates(): void
+    {
+        $issue = new Issue();
+        $issue->setId(990002);
+
+        $saved = null;
+        $mock = $this->createIssueRepositoryMock();
+        $mock->shouldReceive('edit')->once()->andReturnUsing(function ($edited) use (&$saved) {
+            $saved = $edited->getDatePublished();
+        });
+
+        $before = Core::getCurrentDate();
+        IssueProcessor::fillMissingIssueDates([
+            ['issue' => $issue, 'journalId' => 1],
+        ]);
+        $after = Core::getCurrentDate();
+
+        $this->assertNotEmpty($saved);
+        $this->assertGreaterThanOrEqual($before, $saved);
+        $this->assertLessThanOrEqual($after, $saved);
     }
 }
