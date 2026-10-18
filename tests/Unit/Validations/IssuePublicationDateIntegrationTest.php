@@ -284,4 +284,90 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
 
         $this->assertSame([5, 2], $assigned);
     }
+
+    /**
+     * An issue already published later than the import stays current.
+     */
+    public function testReorderDoesNotAssignImportedIssueWhenExistingIssueIsMoreRecent(): void
+    {
+        $existing = new Issue();
+        $existing->setId(10);
+        $existing->setYear(2024);
+        $existing->setVolume(1);
+        $existing->setNumber('1');
+        $existing->setDatePublished('2026-03-01');
+
+        $imported = new Issue();
+        $imported->setId(20);
+        $imported->setYear(2025);
+        $imported->setVolume(1);
+        $imported->setNumber('1');
+        $imported->setDatePublished('2024-06-01');
+
+        $collector = Mockery::mock(IssueCollector::class);
+        $collector->shouldReceive('filterByContextIds')->with([5])->andReturnSelf();
+        $collector->shouldReceive('filterByPublished')->with(true)->andReturnSelf();
+        $collector->shouldReceive('getMany')->andReturn(new LazyCollection([$existing, $imported]));
+
+        $dao = Mockery::mock(IssueDAO::class);
+        $dao->shouldReceive('moveCustomIssueOrder');
+        $dao->shouldReceive('resequenceCustomIssueOrders');
+
+        $this->backupContainerInstance(IssueRepository::class);
+        $repo = Mockery::mock(IssueRepository::class)->makePartial();
+        $repo->shouldReceive('getCollector')->andReturn($collector);
+        $repo->dao = $dao;
+        $assigned = false;
+        $repo->shouldReceive('updateCurrent')->andReturnUsing(function () use (&$assigned) {
+            $assigned = true;
+        });
+        app()->instance(IssueRepository::class, $repo);
+
+        IssueProcessor::reorderAllIssuesForJournal(5, [20 => true]);
+
+        $this->assertFalse($assigned);
+    }
+
+    /**
+     * An imported issue published later than existing issues becomes current.
+     */
+    public function testReorderAssignsImportedIssueWhenItIsMoreRecentThanExisting(): void
+    {
+        $existing = new Issue();
+        $existing->setId(10);
+        $existing->setYear(2020);
+        $existing->setVolume(1);
+        $existing->setNumber('1');
+        $existing->setDatePublished('2020-01-01');
+
+        $imported = new Issue();
+        $imported->setId(20);
+        $imported->setYear(2024);
+        $imported->setVolume(1);
+        $imported->setNumber('1');
+        $imported->setDatePublished('2024-06-01');
+
+        $collector = Mockery::mock(IssueCollector::class);
+        $collector->shouldReceive('filterByContextIds')->with([5])->andReturnSelf();
+        $collector->shouldReceive('filterByPublished')->with(true)->andReturnSelf();
+        $collector->shouldReceive('getMany')->andReturn(new LazyCollection([$existing, $imported]));
+
+        $dao = Mockery::mock(IssueDAO::class);
+        $dao->shouldReceive('moveCustomIssueOrder');
+        $dao->shouldReceive('resequenceCustomIssueOrders');
+
+        $this->backupContainerInstance(IssueRepository::class);
+        $repo = Mockery::mock(IssueRepository::class)->makePartial();
+        $repo->shouldReceive('getCollector')->andReturn($collector);
+        $repo->dao = $dao;
+        $assigned = null;
+        $repo->shouldReceive('updateCurrent')->once()->andReturnUsing(function ($journalId, $issue) use (&$assigned) {
+            $assigned = [$journalId, $issue->getId()];
+        });
+        app()->instance(IssueRepository::class, $repo);
+
+        IssueProcessor::reorderAllIssuesForJournal(5, [20 => true]);
+
+        $this->assertSame([5, 20], $assigned);
+    }
 }
