@@ -16,6 +16,7 @@
 
 namespace APP\plugins\importexport\csv\shared\handlers;
 
+use APP\plugins\importexport\csv\shared\exceptions\CsvEncodingException;
 use Exception;
 
 class CSVFileHandler
@@ -24,12 +25,24 @@ class CSVFileHandler
     public static function createReadableCSVFile(string $filePath): ?\SplFileObject
     {
         try {
+            $encodingResult = CsvEncodingHandler::ensureUtf8File($filePath);
+            if ($encodingResult['converted']) {
+                echo __('plugins.importexport.csv.fileConvertedToUtf8', [
+                    'filePath' => $filePath,
+                    'sourceEncoding' => $encodingResult['sourceEncoding'],
+                ]) . "\n";
+            } elseif ($encodingResult['bomRemoved']) {
+                echo __('plugins.importexport.csv.fileUtf8BomRemoved', ['filePath' => $filePath]) . "\n";
+            }
+
             $file = new \SplFileObject($filePath, 'r');
             $file->setFlags(\SplFileObject::READ_CSV);
             // Disable PHP's backslash escape so quoted fields match what spreadsheets show.
             // With the default escape, a value ending in "\" swallows the following columns.
             $file->setCsvControl(',', '"', '');
             return $file;
+        } catch (CsvEncodingException $e) {
+            throw $e;
         } catch (\Exception $e) {
             $errorMessage =  __('plugins.importexport.csv.couldNotOpenFile', [
                 'filePath' => $filePath,
