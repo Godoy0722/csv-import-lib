@@ -63,6 +63,8 @@ class AuthorsProcessor
             $author->setData('publicationId', $publication->getId());
 
             static::updateAuthorFromCsv($author, $givenName, $familyName, $orcid, $affiliation, $biography, $data->locale, false);
+            $author->setIncludeInBrowse(true);
+            $author->setSequence($index);
 
             $authorId = Repo::author()->add($author);
             static::$csvAuthorEntryToId[$authorString] = $authorId;
@@ -180,6 +182,8 @@ class AuthorsProcessor
             $newAuthor->setOrcid($author->getOrcid());
             $newAuthor->setOrcidVerified($author->hasVerifiedOrcid());
             $newAuthor->setBiography($author->getBiography(null), null);
+            $newAuthor->setIncludeInBrowse($author->getIncludeInBrowse());
+            $newAuthor->setSequence($author->getSequence());
 
             foreach ($author->getAffiliations() as $affiliation) {
                 $newAffiliation = Repo::affiliation()->newDataObject();
@@ -247,6 +251,11 @@ class AuthorsProcessor
                 $data->locale,
                 $existingAuthor !== null
             );
+            $author->setIncludeInBrowse(true);
+
+            if (!$existingAuthor) {
+                $author->setSequence(count($existingAuthors));
+            }
 
             $existingAuthor ? Repo::author()->dao->update($author) : Repo::author()->add($author);
             static::$csvAuthorEntryToId[$authorString] = $author->getId();
@@ -363,5 +372,7 @@ class AuthorsProcessor
         if (!empty($biography)) {
             $author->setBiography($biography, $locale);
         }
+
+        $author->setIncludeInBrowse(true);
     }
 }

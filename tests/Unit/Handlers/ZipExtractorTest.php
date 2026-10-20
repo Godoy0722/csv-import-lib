@@ -120,6 +120,20 @@ class ZipExtractorTest extends BaseTestCase
         $this->extractor->extract($zipPath, $this->tempDir);
     }
 
+    public function testExtractZipWithEllipsisInFilenameSucceeds(): void
+    {
+        $entryName = 'v1/Kill, Capture ... or Neutralize How Operational Planning Changes the Language of Communicating War.pdf';
+        $zipPath = $this->createZipWithFiles([
+            $entryName => '%PDF-1.4',
+        ]);
+
+        $extractDir = $this->extractor->extract($zipPath, $this->tempDir);
+
+        $this->assertFileExists($extractDir . '/' . $entryName);
+
+        $this->cleanupTempDirectory($extractDir);
+    }
+
     public function testExtractZipWithAbsolutePathThrowsException(): void
     {
         $zipPath = $this->createZipWithFiles([
@@ -158,7 +172,7 @@ class ZipExtractorTest extends BaseTestCase
         $this->cleanupTempDirectory($dir);
     }
 
-    public function testResolveSourceDirWithMultipleSubdirsReturnsExtractDir(): void
+    public function testResolveSourceDirWithMultipleSubdirsThrowsException(): void
     {
         $dir = $this->createTempDirectory();
         mkdir($dir . '/subdir_a');
@@ -166,9 +180,39 @@ class ZipExtractorTest extends BaseTestCase
         file_put_contents($dir . '/subdir_a/submissions.csv', 'title,author');
         file_put_contents($dir . '/subdir_b/users.csv', 'email,name');
 
+        $this->expectException(ZipExtractionException::class);
+
+        ZipExtractor::resolveSourceDir($dir);
+
+        $this->cleanupTempDirectory($dir);
+    }
+
+    public function testResolveSourceDirIgnoresMacOsxMetadataFolder(): void
+    {
+        $dir = $this->createTempDirectory();
+        mkdir($dir . '/__MACOSX');
+        $subdir = $dir . '/my_import';
+        mkdir($subdir);
+        file_put_contents($subdir . '/submissions.csv', 'title,author');
+
         $resolved = ZipExtractor::resolveSourceDir($dir);
 
-        $this->assertEquals($dir, $resolved);
+        $this->assertEquals($subdir, $resolved);
+        $this->cleanupTempDirectory($dir);
+    }
+
+    public function testResolveSourceDirRejectsCsvOnlyInDeepSubfolder(): void
+    {
+        $dir = $this->createTempDirectory();
+        $wrapper = $dir . '/import';
+        mkdir($wrapper);
+        mkdir($wrapper . '/nested');
+        file_put_contents($wrapper . '/nested/submissions.csv', 'title,author');
+
+        $this->expectException(ZipExtractionException::class);
+
+        ZipExtractor::resolveSourceDir($dir);
+
         $this->cleanupTempDirectory($dir);
     }
 

@@ -32,4 +32,9 @@ class ZipExtractionException extends \RuntimeException
     {
         return new self(__('plugins.importexport.csv.zipPathTraversal', ['entry' => $entryName]));
     }
+
+    public static function invalidLayout(): self
+    {
+        return new self(__('plugins.importexport.csv.zipInvalidLayout'));
+    }
 }

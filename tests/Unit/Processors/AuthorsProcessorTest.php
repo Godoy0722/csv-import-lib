@@ -424,6 +424,8 @@ class AuthorsProcessorTest extends BaseTestCase
 
         $this->assertEquals(1, $addCallCount);
         $this->assertEquals('Expert in machine learning', $capturedAuthor->getBiography('en'));
+        $this->assertTrue($capturedAuthor->getIncludeInBrowse());
+        $this->assertEquals(0, $capturedAuthor->getSequence());
     }
 
     public function testProcessCreatesSingleAuthor(): void

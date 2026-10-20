@@ -22,8 +22,8 @@ use ZipArchive;
 
 class ZipExtractor
 {
-    /** Maximum total uncompressed size allowed (500 MB) */
-    public const MAX_TOTAL_BYTES = 524288000;
+    /** Maximum total uncompressed size allowed (2 GB) */
+    public const MAX_TOTAL_BYTES = 2147483648;
 
     /** Maximum allowed compression ratio per entry */
     public const MAX_RATIO = 100;
@@ -74,7 +74,7 @@ class ZipExtractor
 
                 $name = $stat['name'];
 
-                if (str_contains($name, '..') || str_starts_with($name, '/')) {
+                if (self::zipEntryNameIsUnsafe($name)) {
                     throw ZipExtractionException::pathTraversal($name);
                 }
 
@@ -109,41 +109,94 @@ class ZipExtractor
     }
 
     /**
-     * Resolve the actual source directory from an extraction root.
+     * Reject ZIP entry names that escape the extraction directory.
+     * Literal "..." in filenames is allowed; only ".." path segments are blocked.
+     */
+    private static function zipEntryNameIsUnsafe(string $name): bool
+    {
+        if (str_starts_with($name, '/') || str_contains($name, "\0")) {
+            return true;
+        }
+
+        return preg_match('#(^|[\\\\/])\.\.([\\\\/]|$)#', $name) === 1;
+    }
+
+    /**
+     * Resolve the import source directory from a ZIP extraction root.
      *
-     * - If the root contains CSV files directly, returns the root.
-     * - If the root contains exactly one subdirectory and no CSV files, returns that subdirectory.
-     * - Otherwise returns the root.
+     * Allowed layouts (multiple CSV files at the allowed level are fine):
+     * - CSV file(s) at the extract root, with optional asset files or subfolders.
+     * - Exactly one content subfolder (ignoring {@see shouldSkipArchiveDirectory}) whose
+     *   top level contains at least one CSV, with optional assets or subfolders inside it.
      *
      * @param string $extractDir Path returned by extract().
      *
      * @return string Resolved source directory.
+     *
+     * @throws ZipExtractionException When the layout does not match the rules above.
      */
     public static function resolveSourceDir(string $extractDir): string
     {
-        $entries = array_diff(scandir($extractDir), ['.', '..']);
-
-        $hasCsvAtRoot  = false;
-        $subdirectories = [];
-
-        foreach ($entries as $entry) {
-            $fullPath = $extractDir . '/' . $entry;
-            if (is_dir($fullPath)) {
-                $subdirectories[] = $fullPath;
-            } elseif (str_ends_with(mb_strtolower($entry), '.csv')) {
-                $hasCsvAtRoot = true;
-            }
-        }
-
-        if ($hasCsvAtRoot) {
+        if (self::directoryContainsCsvFile($extractDir)) {
             return $extractDir;
         }
 
-        if (count($subdirectories) === 1) {
-            return $subdirectories[0];
+        $contentSubdirs = [];
+        foreach (array_diff(scandir($extractDir), ['.', '..']) as $entry) {
+            $fullPath = $extractDir . '/' . $entry;
+            if (!is_dir($fullPath) || self::shouldSkipArchiveDirectory($entry)) {
+                continue;
+            }
+            $contentSubdirs[] = $fullPath;
         }
 
-        return $extractDir;
+        if (count($contentSubdirs) !== 1) {
+            throw ZipExtractionException::invalidLayout();
+        }
+
+        $wrapperDir = $contentSubdirs[0];
+        if (!self::directoryContainsCsvFile($wrapperDir)) {
+            throw ZipExtractionException::invalidLayout();
+        }
+
+        return $wrapperDir;
+    }
+
+    /**
+     * Detect ZIP archives by extension or local file header (PK\x03\x04).
+     */
+    public static function isZipArchive(string $filePath, string $originalFileName = ''): bool
+    {
+        if (strtolower(pathinfo($originalFileName, PATHINFO_EXTENSION)) === 'zip') {
+            return true;
+        }
+
+        $handle = @fopen($filePath, 'rb');
+        if ($handle === false) {
+            return false;
+        }
+
+        $magic = fread($handle, 4);
+        fclose($handle);
+
+        return $magic === "PK\x03\x04";
+    }
+
+    private static function shouldSkipArchiveDirectory(string $name): bool
+    {
+        return in_array($name, ['__MACOSX', '.git', 'node_modules'], true)
+            || str_starts_with($name, '.');
+    }
+
+    private static function directoryContainsCsvFile(string $dir): bool
+    {
+        foreach (new \DirectoryIterator($dir) as $fileInfo) {
+            if ($fileInfo->isFile() && strtolower($fileInfo->getExtension()) === 'csv') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
