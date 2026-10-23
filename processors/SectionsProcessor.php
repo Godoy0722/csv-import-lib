@@ -22,6 +22,61 @@ use APP\publication\Publication;
 
 class SectionsProcessor
 {
+    /**
+     * First three characters of the section title, uppercased (used when CSV omits sectionAbbrev).
+     */
+    public static function abbrevBaseFromSectionTitle(string $sectionTitle): string
+    {
+        return mb_strtoupper(mb_substr(trim($sectionTitle), 0, 3));
+    }
+
+    /**
+     * @param string[] $existingAbbrevs Uppercased abbreviations already used in the journal
+     */
+    public static function generateUniqueSectionAbbrevFromTitle(string $sectionTitle, array $existingAbbrevs): string
+    {
+        $base = static::abbrevBaseFromSectionTitle($sectionTitle);
+        $existing = array_fill_keys(array_map(
+            fn (string $abbrev) => mb_strtoupper(trim($abbrev)),
+            $existingAbbrevs
+        ), true);
+
+        $candidate = $base;
+        $suffix = 0;
+        while (isset($existing[$candidate])) {
+            $suffix++;
+            $candidate = $base . '_' . $suffix;
+        }
+
+        return $candidate;
+    }
+
+    public static function resolveSectionAbbrev(
+        string $sectionTitle,
+        string $sectionAbbrevFromCsv,
+        int $contextId,
+        string $locale
+    ): string {
+        $sectionAbbrevFromCsv = trim($sectionAbbrevFromCsv);
+        if ($sectionAbbrevFromCsv !== '') {
+            return mb_strtoupper($sectionAbbrevFromCsv);
+        }
+
+        $existingAbbrevs = [];
+        $sections = Repo::section()->getCollector()
+            ->filterByContextIds([$contextId])
+            ->getMany();
+
+        foreach ($sections as $section) {
+            $abbrev = $section->getAbbrev($locale);
+            if (is_string($abbrev) && $abbrev !== '') {
+                $existingAbbrevs[] = $abbrev;
+            }
+        }
+
+        return static::generateUniqueSectionAbbrevFromTitle($sectionTitle, $existingAbbrevs);
+    }
+
 	public static function newSectionToPublication(object $data, int $contextId, Publication $publication): void
     {
         // A row may carry only sectionAbbrev; the abbreviation then names the section as well.
@@ -30,6 +85,13 @@ class SectionsProcessor
         if ($sectionTitle === '') {
             return;
         }
+
+        $sectionAbbrev = static::resolveSectionAbbrev(
+            $sectionTitle,
+            (string) ($data->sectionAbbrev ?? ''),
+            $contextId,
+            $data->locale
+        );
 
         $section = Repo::section()->newDataObject();
 
@@ -44,8 +106,8 @@ class SectionsProcessor
         $section->setHideAuthor(false);
         $section->setIsInactive(false);
         $section->setTitle($sectionTitle, $data->locale);
-        $section->setAbbrev(mb_strtoupper(trim($data->sectionAbbrev)), $data->locale);
-        $section->setPath(mb_strtolower(trim($data->sectionAbbrev)));
+        $section->setAbbrev($sectionAbbrev, $data->locale);
+        $section->setPath(mb_strtolower($sectionAbbrev));
         $section->setIdentifyType('', $data->locale);
         $section->setPolicy('', $data->locale);
 
