@@ -274,7 +274,8 @@ class AuthorsProcessor
 
     /**
      * Parse one author entry: Given,Family,Email,ORCID,Affiliation,Biography.
-     * Commas inside quotes stay in that field.
+     * Commas inside quotes stay in that field. Anything after the affiliation
+     * is biography, including unquoted commas.
      */
     public static function parseAuthorString(string $authorString, string $contactEmail): array
     {
@@ -284,7 +285,7 @@ class AuthorsProcessor
         $emailAddress = $authorParts[2] ?? '';
         $orcid = $authorParts[3] ?? '';
         $affiliation = $authorParts[4] ?? '';
-        $biography = $authorParts[5] ?? '';
+        $biography = implode(', ', array_slice($authorParts, 5));
 
         if (empty($emailAddress)) {
             $emailAddress = $contactEmail;

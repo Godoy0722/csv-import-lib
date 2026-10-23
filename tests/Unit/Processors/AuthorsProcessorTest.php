@@ -315,6 +315,35 @@ class AuthorsProcessorTest extends BaseTestCase
         $this->assertSame('Studies forecasting, including LSTM models.', $result[5]);
     }
 
+    public function testParseAuthorStringKeepsRemainingCommasInBiography(): void
+    {
+        $result = AuthorsProcessor::parseAuthorString(
+            'Alex Q.,Rivera,alex.rivera@example.edu,,Northwind Herbarium, Example University branch, P.O. Box 1000, 1000 AA Sample City, Exampleland',
+            'contact@example.com'
+        );
+
+        $this->assertSame('Alex Q.', $result[0]);
+        $this->assertSame('Rivera', $result[1]);
+        $this->assertSame('alex.rivera@example.edu', $result[2]);
+        $this->assertSame('', $result[3]);
+        $this->assertSame('Northwind Herbarium', $result[4]);
+        $this->assertSame(
+            'Example University branch, P.O. Box 1000, 1000 AA Sample City, Exampleland',
+            $result[5]
+        );
+    }
+
+    public function testParseAuthorStringKeepsQuotedAffiliationAndUnquotedBiographyRemainder(): void
+    {
+        $result = AuthorsProcessor::parseAuthorString(
+            'Maria,Santos,maria@x.pt,,"Technical University of Lisbon, Department of Computer Science",Studies forecasting, including LSTM models.',
+            'contact@example.com'
+        );
+
+        $this->assertSame('Technical University of Lisbon, Department of Computer Science', $result[4]);
+        $this->assertSame('Studies forecasting, including LSTM models.', $result[5]);
+    }
+
     public function testSplitAuthorEntriesKeepsSemicolonInsideQuotedFields(): void
     {
         $entries = AuthorsProcessor::splitAuthorEntries(
