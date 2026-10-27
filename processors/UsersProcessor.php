@@ -48,7 +48,7 @@ class UsersProcessor
         $user->setAffiliation($data->affiliation, $locale);
         $user->setEmail($data->email);
         $user->setCountry($data->country);
-        $user->setUsername($data->username ?? static::getValidUsername($data->firstname, $data->lastname));
+        $user->setUsername($data->username);
         $user->setPassword(Validation::encryptCredentials($data->username, $data->tempPassword));
         $user->setMustChangePassword(true);
         $user->setDateRegistered(Core::getCurrentDate());
@@ -87,23 +87,5 @@ class UsersProcessor
         Repo::user()->edit($user);
 
         return Repo::user()->get($user->getId());
-    }
-
-    public static function getValidUsername(string $firstname, string $lastname): string
-    {
-        $letters = range('a', 'z');
-
-        do {
-            $randomLetters = '';
-            for ($i = 0; $i < 3; $i++) {
-                $randomLetters .= $letters[array_rand($letters)];
-            }
-
-            $username = mb_strtolower(mb_substr($firstname, 0, 1) . $lastname . $randomLetters);
-            $existingUser = CachedEntities::getCachedUserByUsername($username);
-
-        } while (!is_null($existingUser));
-
-        return $username;
     }
 }

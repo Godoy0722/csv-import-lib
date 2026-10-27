@@ -9,7 +9,7 @@
  *
  * @class UsersProcessorTest
  *
- * @brief Tests for UsersProcessor class - testing username generation and parsing logic
+ * @brief Tests for UsersProcessor class - user create/update and parsing logic
  */
 
 namespace APP\plugins\importexport\csv\shared\tests\Unit\Processors;
@@ -25,96 +25,6 @@ use PKP\user\User;
 #[CoversClass(UsersProcessor::class)]
 class UsersProcessorTest extends BaseTestCase
 {
-    // ==================== Username Generation Tests ====================
-
-    public function testGetValidUsernameGeneratesUniqueUsername(): void
-    {
-        // Since CachedEntities is cleared in setUp, no existing users
-        $username = UsersProcessor::getValidUsername('John', 'Doe');
-
-        $this->assertStringStartsWith('j', $username);
-        $this->assertStringContainsString('doe', $username);
-        // Username should be: first letter + lastname + 3 random letters
-        $this->assertGreaterThanOrEqual(7, strlen($username)); // j + doe + 3 letters = 7+
-    }
-
-    public function testGetValidUsernameIsLowercase(): void
-    {
-        $username = UsersProcessor::getValidUsername('JOHN', 'DOE');
-
-        $this->assertEquals(strtolower($username), $username);
-    }
-
-    public function testGetValidUsernameHandlesSpecialCharacters(): void
-    {
-        $username = UsersProcessor::getValidUsername('José', 'García');
-
-        $this->assertStringStartsWith('j', $username);
-        // Should contain the full lastname in lowercase
-        $this->assertStringContainsString('garcía', $username);
-    }
-
-    public function testGetValidUsernameConsistentPattern(): void
-    {
-        // Generate multiple usernames and verify pattern
-        for ($i = 0; $i < 5; $i++) {
-            $username = UsersProcessor::getValidUsername('Test', 'User');
-
-            $this->assertStringStartsWith('t', $username);
-            $this->assertStringContainsString('user', $username);
-            // Must have 3 random letters at end
-            $this->assertGreaterThanOrEqual(8, strlen($username)); // t + user + 3 letters
-        }
-    }
-
-    public function testGetValidUsernameWithShortNames(): void
-    {
-        $username = UsersProcessor::getValidUsername('A', 'B');
-
-        $this->assertStringStartsWith('a', $username);
-        $this->assertStringContainsString('b', $username);
-    }
-
-    public function testGetValidUsernameWithLongNames(): void
-    {
-        $username = UsersProcessor::getValidUsername('Christopher', 'Bartholomew');
-
-        $this->assertStringStartsWith('c', $username);
-        $this->assertStringContainsString('bartholomew', $username);
-    }
-
-    // ==================== Username Pattern Tests ====================
-
-    public function testUsernameGenerationPattern(): void
-    {
-        $givenName = 'John';
-        $familyName = 'Doe';
-
-        $baseUsername = mb_strtolower(mb_substr($givenName, 0, 1) . $familyName);
-
-        $this->assertEquals('jdoe', $baseUsername);
-    }
-
-    public function testUsernameGenerationPatternWithUnicode(): void
-    {
-        $givenName = '田中';
-        $familyName = '太郎';
-
-        $baseUsername = mb_strtolower(mb_substr($givenName, 0, 1) . $familyName);
-
-        $this->assertEquals('田太郎', $baseUsername);
-    }
-
-    public function testUsernameGenerationPatternWithEmptyGivenName(): void
-    {
-        $givenName = '';
-        $familyName = 'Doe';
-
-        $baseUsername = mb_strtolower(mb_substr($givenName, 0, 1) . $familyName);
-
-        $this->assertEquals('doe', $baseUsername);
-    }
-
     // ==================== User Data Parsing Tests ====================
 
     public function testUserDataObjectCreation(): void
@@ -253,41 +163,6 @@ class UsersProcessorTest extends BaseTestCase
             ->buildObject();
 
         $this->assertEquals('Universidade de São Paulo', $data->affiliation);
-    }
-
-    // ==================== getValidUsername Collision Avoidance Tests ====================
-
-    public function testGetValidUsernameAvoidsExistingUsernames(): void
-    {
-        // Pre-populate cache with a user that would match first attempt pattern
-        // The method generates: first_letter + lastname + 3 random letters
-        // We can't predict exact random letters, but we can verify collision avoidance
-        $user1 = MockFactory::user()->withUsername('jdoeabc')->build();
-        CachedEntities::$users['jdoeabc'] = $user1;
-
-        $username = UsersProcessor::getValidUsername('John', 'Doe');
-
-        // The generated username should NOT be 'jdoeabc' (the existing one)
-        $this->assertNotEquals('jdoeabc', $username);
-        $this->assertStringStartsWith('j', $username);
-        $this->assertStringContainsString('doe', $username);
-    }
-
-    public function testGetValidUsernameAlwaysReturnsNonEmptyString(): void
-    {
-        for ($i = 0; $i < 10; $i++) {
-            $username = UsersProcessor::getValidUsername('Test', 'User');
-            $this->assertNotEmpty($username);
-            $this->assertIsString($username);
-        }
-    }
-
-    public function testGetValidUsernameWithMultibyteFirstChar(): void
-    {
-        $username = UsersProcessor::getValidUsername('Ação', 'Teste');
-
-        $this->assertStringContainsString('teste', $username);
-        $this->assertGreaterThanOrEqual(5, mb_strlen($username));
     }
 
     // ==================== Complete User Data Tests ====================
@@ -520,51 +395,6 @@ class UsersProcessorTest extends BaseTestCase
         UsersProcessor::process($data, 'en');
 
         $this->assertEquals('customuser', $capturedUser->getUsername());
-    }
-
-    public function testProcessFallsBackToGeneratedUsername(): void
-    {
-        $capturedUser = null;
-        $userRepoMock = $this->mockUserRepository();
-
-        $userRepoMock->shouldReceive('add')
-            ->andReturnUsing(function ($user) use (&$capturedUser) {
-                $capturedUser = $user;
-                return 1;
-            });
-
-        $returnedUser = $this->createMockUser(['id' => 1]);
-        $userRepoMock->shouldReceive('get')->with(1)->andReturn($returnedUser);
-
-        $data = $this->createUserDataObject([
-            'firstname' => 'John',
-            'lastname' => 'Doe',
-            'username' => null,
-        ]);
-
-        UsersProcessor::process($data, 'en');
-
-        $this->assertMatchesRegularExpression('/^jdoe[a-z]{3}$/', $capturedUser->getUsername());
-    }
-
-    // ==================== getValidUsername() with Mocked Repo Tests ====================
-
-    public function testGetValidUsernameRetriesOnCollision(): void
-    {
-        $existingUser = $this->createMockUser(['id' => 1, 'email' => 'existing@example.com']);
-        $callCount = 0;
-
-        $userRepoMock = $this->mockUserRepository();
-        $userRepoMock->shouldReceive('getByUsername')
-            ->andReturnUsing(function () use ($existingUser, &$callCount) {
-                $callCount++;
-                return $callCount === 1 ? $existingUser : null;
-            });
-
-        $username = UsersProcessor::getValidUsername('John', 'Doe');
-
-        $this->assertMatchesRegularExpression('/^jdoe[a-z]{3}$/', $username);
-        $this->assertGreaterThanOrEqual(2, $callCount);
     }
 
     // ==================== update() Tests ====================
