@@ -256,6 +256,7 @@ class UsersProcessorTest extends BaseTestCase
         $this->assertEquals('jsmith', $capturedUser->getUsername());
         $this->assertTrue($capturedUser->getMustChangePassword());
         $this->assertNotEmpty($capturedUser->getDateRegistered());
+        $this->assertNotEmpty($capturedUser->getDateValidated());
     }
 
     public function testProcessEncryptsPassword(): void
@@ -434,6 +435,32 @@ class UsersProcessorTest extends BaseTestCase
         $this->assertEquals('New Affil', $result->getAffiliation('en'));
         $this->assertEquals('US', $result->getCountry());
         $this->assertEquals('new@example.com', $result->getEmail());
+        $this->assertNotEmpty($result->getDateValidated());
+    }
+
+    public function testUpdatePreservesExistingDateValidated(): void
+    {
+        $this->beginDatabaseTransaction();
+
+        $existingUser = MockFactory::user()
+            ->withId(42)
+            ->withUsername('originaluser')
+            ->build();
+        $existingUser->setDateValidated('2020-01-15 10:00:00');
+
+        $userRepoMock = $this->mockUserRepository();
+        $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
+        $userRepoMock->shouldReceive('get')->with(42)->andReturn($existingUser);
+
+        $data = $this->createUserDataObject([
+            'firstname' => 'NewFirst',
+        ]);
+
+        $result = UsersProcessor::update($existingUser, $data, 'en');
+
+        $this->rollbackDatabaseTransaction();
+
+        $this->assertEquals('2020-01-15 10:00:00', $result->getDateValidated());
     }
 
     public function testUpdatePreservesUsername(): void
