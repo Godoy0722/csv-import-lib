@@ -303,6 +303,23 @@ class GalleyProcessorTest extends BaseTestCase
         $this->assertEquals('My Document', $capturedGalley->getLabel());
     }
 
+    public function testProcessUsesExplicitGalleyLocale(): void
+    {
+        $capturedGalley = null;
+        $galleyRepoMock = $this->mockGalleyRepository();
+        $galleyRepoMock->shouldReceive('add')->andReturnUsing(function ($galley) use (&$capturedGalley) {
+            $capturedGalley = $galley;
+            return 1;
+        });
+
+        $data = (object) ['locale' => 'en', 'doi' => ''];
+
+        GalleyProcessor::process(10, $data, 'PDF', 1, 'pdf', 'pt_BR');
+
+        $this->assertEquals('pt_BR', $capturedGalley->getLocale());
+        $this->assertEquals('PDF', $capturedGalley->getData('name', 'pt_BR'));
+    }
+
     public function testProcessReturnsCustomGalleyId(): void
     {
         $galleyRepoMock = $this->mockGalleyRepository();
