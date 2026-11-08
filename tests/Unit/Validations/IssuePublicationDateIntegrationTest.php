@@ -370,4 +370,76 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
 
         $this->assertSame([5, 20], $assigned);
     }
+
+    public function testSelectCurrentIssueUsesImportedIssueWhenItSortsFirst(): void
+    {
+        $existing = $this->makeIssue(10, 2020, '2020-01-01');
+        $imported = $this->makeIssue(20, 2024, '2024-06-01');
+
+        $selected = IssueProcessor::selectCurrentIssue([$existing, $imported], [20 => true], $existing);
+
+        $this->assertSame(20, $selected?->getId());
+    }
+
+    public function testSelectCurrentIssueKeepsJournalCurrentWhenImportedIssueIsOlderByDate(): void
+    {
+        $existing = $this->makeIssue(10, 2024, '2026-03-01');
+        $imported = $this->makeIssue(20, 2025, '2024-06-01');
+
+        $selected = IssueProcessor::selectCurrentIssue([$existing, $imported], [20 => true], $existing);
+
+        $this->assertSame(10, $selected?->getId());
+    }
+
+    public function testSelectCurrentIssueUsesJournalIssueWhenItSortsAheadOfTheCsv(): void
+    {
+        $journalIssue = $this->makeIssue(10, 2026, '2026-01-01');
+        $imported = $this->makeIssue(20, 2024, '2024-06-01');
+        $current = $this->makeIssue(3, 2019, '2019-01-01');
+
+        $selected = IssueProcessor::selectCurrentIssue(
+            [$journalIssue, $imported, $current],
+            [20 => true],
+            $current
+        );
+
+        $this->assertSame(10, $selected?->getId());
+    }
+
+    public function testSelectCurrentIssueKeepsCurrentWhenTheImportAddsNoIssues(): void
+    {
+        $current = $this->makeIssue(3, 2019, '2019-01-01');
+
+        $selected = IssueProcessor::selectCurrentIssue([], [], $current);
+
+        $this->assertSame(3, $selected?->getId());
+    }
+
+    public function testDescribeIssueIncludesTheFieldsTheIssueHas(): void
+    {
+        $issue = $this->makeIssue(1, 2024, '2024-06-01');
+        $issue->setVolume(12);
+        $issue->setNumber('3');
+        $issue->setTitle('Special section', 'en');
+        $issue->setData('locale', 'en');
+
+        $label = IssueProcessor::describeIssue($issue);
+
+        $this->assertStringContainsString('12', $label);
+        $this->assertStringContainsString('3', $label);
+        $this->assertStringContainsString('2024', $label);
+        $this->assertStringContainsString('Special section', $label);
+    }
+
+    private function makeIssue(int $id, int $year, string $date): Issue
+    {
+        $issue = new Issue();
+        $issue->setId($id);
+        $issue->setYear($year);
+        $issue->setVolume(1);
+        $issue->setNumber('1');
+        $issue->setDatePublished($date);
+
+        return $issue;
+    }
 }
