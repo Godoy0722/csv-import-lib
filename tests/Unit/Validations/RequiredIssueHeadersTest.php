@@ -110,6 +110,15 @@ class RequiredIssueHeadersTest extends BaseTestCase
         $this->assertSame('galleyLocales', $headers[$labelsIndex + 1]);
     }
 
+    public function testHtmlGalleyLocaleColumnFollowsHtmlGalley(): void
+    {
+        $headers = RequiredIssueHeaders::$issueHeaders;
+        $htmlGalleyIndex = array_search('htmlGalley', $headers, true);
+
+        $this->assertNotFalse($htmlGalleyIndex);
+        $this->assertSame('htmlGalleyLocale', $headers[$htmlGalleyIndex + 1]);
+    }
+
     public function testMissingVersionIdentifierIsNotAFollowUpRow(): void
     {
         $row = $this->row(['versionIdentifier' => '', 'version' => '2', 'locale' => 'en_US']);
