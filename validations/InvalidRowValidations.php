@@ -198,6 +198,25 @@ class InvalidRowValidations
     }
 
     /**
+     * Private submission files, separated by semicolons. An empty cell is skipped by the caller.
+     *
+     * @throws RowValidationException
+     */
+    public static function validateSubmissionFiles(string $filenames, string $sourceDir): void
+    {
+        foreach (array_map('trim', explode(';', $filenames)) as $filename) {
+            if ($filename === '') {
+                continue;
+            }
+
+            static::validatePathWithinSourceDir($filename, $sourceDir);
+            if (!is_readable("{$sourceDir}/{$filename}")) {
+                throw new RowValidationException(__('plugins.importexport.csv.invalidGalleyFile', ['filename' => $filename]));
+            }
+        }
+    }
+
+    /**
      * Locales aligned with galleyFilenames. An empty galleyLocales value repeats the row locale.
      *
      * @return string[]

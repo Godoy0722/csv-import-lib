@@ -169,6 +169,32 @@ class SubmissionFileProcessorTest extends BaseTestCase
         $this->assertNull($capturedFile->getData('description', 'en'));
     }
 
+    public function testProcessPrivateStoresASubmissionFileWithoutAGalley(): void
+    {
+        $capturedFile = null;
+        $subFileRepoMock = $this->mockSubmissionFileRepository();
+
+        $subFileRepoMock->shouldReceive('add')
+            ->andReturnUsing(function ($submissionFile) use (&$capturedFile) {
+                $capturedFile = $submissionFile;
+                return 11;
+            });
+
+        $returnedFile = new SubmissionFile();
+        $returnedFile->setId(11);
+        $subFileRepoMock->shouldReceive('get')->with(11)->andReturn($returnedFile);
+
+        $filePath = $this->createTestFile($this->tempDir, 'notes.pdf', '%PDF-1.4 notes');
+
+        SubmissionFileProcessor::processPrivate('en', 5, 42, $filePath, 3, 200);
+
+        $this->assertEquals(SubmissionFile::SUBMISSION_FILE_SUBMISSION, $capturedFile->getData('fileStage'));
+        $this->assertTrue((bool) $capturedFile->getData('viewable'));
+        $this->assertNull($capturedFile->getData('assocType'));
+        $this->assertNull($capturedFile->getData('assocId'));
+        $this->assertSame('notes.pdf', $capturedFile->getData('name', 'en'));
+    }
+
     // ==================== updateAssocInfo() Integration Tests ====================
 
     public function testUpdateAssocInfoCallsEdit(): void

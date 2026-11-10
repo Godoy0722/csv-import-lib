@@ -32,13 +32,13 @@ class PublicationProcessor
      * Create a base Publication with shared defaults (version, status).
      * Subclasses add app-specific fields (title, datePublished) before returning.
      */
-    public static function createInitialPublication(object $data): Publication
+    public static function createInitialPublication(object $data, int $status = Submission::STATUS_PUBLISHED): Publication
     {
         $publication = Repo::publication()->newDataObject();
 
         $version = !empty($data->version) ? (int)$data->version : 1;
         $publication->setData('version', $version);
-        $publication->setData('status', Submission::STATUS_PUBLISHED);
+        $publication->setData('status', $status);
 
         return $publication;
     }
@@ -203,12 +203,12 @@ class PublicationProcessor
      * Create a new publication version by copying base publication data.
      * Bypasses Repo::publication()->version() to avoid CLI context dependency.
      */
-    public static function createPublicationVersionCommons(Publication $basePublication, object $data): Publication
+    public static function createPublicationVersionCommons(Publication $basePublication, object $data, int $status = Submission::STATUS_PUBLISHED): Publication
     {
         $newPublication = Repo::publication()->newDataObject();
         $newPublication->setData('submissionId', $basePublication->getData('submissionId'));
         $newPublication->setData('version', (int)$data->version);
-        $newPublication->setData('status', Submission::STATUS_PUBLISHED);
+        $newPublication->setData('status', $status);
         $newPublication->setData('datePublished', null);
         $newPublication->setData('authors', []);
         $newPublication->setData('primaryContactId', null);

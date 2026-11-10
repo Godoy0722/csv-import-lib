@@ -65,7 +65,7 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
 
         $mock = Mockery::mock(IssueRepository::class)->makePartial();
         $mock->shouldReceive('getCollector')->andReturn($collectorMock);
-        $mock->shouldReceive('add')->andReturn(1);
+        $mock->shouldReceive('add')->andReturn(1)->byDefault();
         $mock->shouldReceive('get')->andReturnUsing(fn() => new Issue());
         $mock->dao = $issueDaoMock;
 
@@ -196,6 +196,111 @@ class IssuePublicationDateIntegrationTest extends BaseTestCase
         } finally {
             $this->rollbackDatabaseTransaction();
         }
+    }
+
+    /**
+     * A queued or scheduled article date does not fill the issue date.
+     */
+    public function testFillMissingIssueDatesIgnoresUnpublishedArticleDates(): void
+    {
+        $this->beginDatabaseTransaction();
+        try {
+            $issueId = 990011;
+            DB::table('publications')->insert([
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2020-01-15', 'status' => 3, 'seq' => 0],
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2024-06-01', 'status' => 1, 'seq' => 0],
+                ['submission_id' => 1, 'issue_id' => $issueId, 'date_published' => '2024-07-01', 'status' => 5, 'seq' => 0],
+            ]);
+
+            $issue = new Issue();
+            $issue->setId($issueId);
+
+            $saved = null;
+            $mock = $this->createIssueRepositoryMock();
+            $mock->shouldReceive('edit')->once()->andReturnUsing(function ($edited) use (&$saved) {
+                $saved = $edited->getDatePublished();
+            });
+
+            IssueProcessor::fillMissingIssueDates([
+                ['issue' => $issue, 'journalId' => 1],
+            ]);
+
+            $this->assertSame('2020-01-15', substr((string) $saved, 0, 10));
+        } finally {
+            $this->rollbackDatabaseTransaction();
+        }
+    }
+
+    /**
+     * A published article publishes a new issue. A queued article leaves it unpublished.
+     */
+    public function testNewIssuePublishedFlagFollowsTheArticle(): void
+    {
+        $captured = null;
+        $mock = $this->createIssueRepositoryMock();
+        $mock->shouldReceive('add')->once()->andReturnUsing(function ($issue) use (&$captured) {
+            $captured = $issue->getPublished();
+            return 8;
+        });
+
+        IssueProcessor::process(1, $this->issueRow(), false);
+
+        $this->assertFalse((bool) $captured);
+    }
+
+    /**
+     * A later published article publishes an issue that was created unpublished.
+     */
+    public function testPublishedArticlePublishesAnExistingUnpublishedIssue(): void
+    {
+        $existing = new Issue();
+        $existing->setId(4);
+        $existing->setPublished(false);
+        $existing->setShowTitle(true);
+        CachedEntities::$issues['title:Future'] = $existing;
+
+        $edited = false;
+        $mock = $this->createIssueRepositoryMock();
+        $mock->shouldReceive('edit')->once()->andReturnUsing(function () use (&$edited) {
+            $edited = true;
+        });
+
+        $issue = IssueProcessor::process(1, $this->issueRow(), true);
+
+        $this->assertTrue($edited);
+        $this->assertTrue((bool) $issue->getPublished());
+    }
+
+    /**
+     * A queued article does not unpublish an issue that is already public.
+     */
+    public function testQueuedArticleLeavesAPublishedIssuePublished(): void
+    {
+        $existing = new Issue();
+        $existing->setId(4);
+        $existing->setPublished(true);
+        $existing->setShowTitle(true);
+        CachedEntities::$issues['title:Future'] = $existing;
+
+        $mock = $this->createIssueRepositoryMock();
+        $mock->shouldReceive('edit')->never();
+
+        $issue = IssueProcessor::process(1, $this->issueRow(), false);
+
+        $this->assertTrue((bool) $issue->getPublished());
+    }
+
+    private function issueRow(): object
+    {
+        return (object) [
+            'locale' => 'en',
+            'issueTitle' => 'Future',
+            'issueVolume' => '',
+            'issueNumber' => '',
+            'issueYear' => '',
+            'issueDescription' => '',
+            'issuePublicationDate' => '',
+        ];
     }
 
     /**

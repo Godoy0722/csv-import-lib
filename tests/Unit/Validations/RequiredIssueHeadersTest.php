@@ -119,6 +119,33 @@ class RequiredIssueHeadersTest extends BaseTestCase
         $this->assertSame('htmlGalleyLocale', $headers[$htmlGalleyIndex + 1]);
     }
 
+    public function testStatusColumnsSitWithTheFieldsTheyAffect(): void
+    {
+        $headers = RequiredIssueHeaders::$issueHeaders;
+        $filesIndex = array_search('submissionFiles', $headers, true);
+        $statusIndex = array_search('submissionStatus', $headers, true);
+
+        $this->assertSame('coverImageAltText', $headers[$filesIndex - 1]);
+        $this->assertSame('galleyFilenames', $headers[$filesIndex + 1]);
+        $this->assertSame('issuePublicationDate', $headers[$statusIndex - 1]);
+        $this->assertSame('datePublished', $headers[$statusIndex + 1]);
+        $this->assertContains('datePublished', RequiredIssueHeaders::$issueRequiredHeaders);
+    }
+
+    public function testPublishedRowRequiresDatePublished(): void
+    {
+        $row = $this->row(['datePublished' => '', 'resolvedStatus' => \APP\submission\Submission::STATUS_PUBLISHED]);
+
+        $this->assertFalse(RequiredIssueHeaders::validateRowHasAllRequiredFields($row, []));
+    }
+
+    public function testQueuedRowRequiresDatePublished(): void
+    {
+        $row = $this->row(['datePublished' => '', 'resolvedStatus' => \APP\submission\Submission::STATUS_QUEUED]);
+
+        $this->assertFalse(RequiredIssueHeaders::validateRowHasAllRequiredFields($row, []));
+    }
+
     public function testMissingVersionIdentifierIsNotAFollowUpRow(): void
     {
         $row = $this->row(['versionIdentifier' => '', 'version' => '2', 'locale' => 'en_US']);

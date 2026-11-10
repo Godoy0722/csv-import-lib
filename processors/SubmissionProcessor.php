@@ -28,12 +28,13 @@ class SubmissionProcessor
         Publication $publication,
         Context $context,
         string $abstract,
-        string $dateSubmitted
+        string $dateSubmitted,
+        int $status = Submission::STATUS_PUBLISHED
     ): Submission {
         $submission = Repo::submission()->newDataObject();
 
         $submission->setData('contextId', $context->getId());
-        $submission->setData('status', Submission::STATUS_PUBLISHED);
+        $submission->setData('status', $status);
         $submission->setData('locale', $locale);
         $submission->setData('stageId', WORKFLOW_STAGE_ID_PRODUCTION);
         $submission->setData('submissionProgress', '');
