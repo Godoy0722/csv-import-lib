@@ -395,7 +395,43 @@ class AuthorsProcessorTest extends BaseTestCase
         $method->invoke(null, $author, 'John', 'Doe', '', 'MIT', '', 'en', false);
 
         $affiliations = $author->getAffiliations();
-        $this->assertNotEmpty($affiliations);
+        $this->assertCount(1, $affiliations);
+        $this->assertEquals('MIT', $affiliations[0]->getName('en'));
+    }
+
+    public function testProcessSplitsQuotedAffiliationsOnPipe(): void
+    {
+        $capturedAuthor = null;
+        $authorRepoMock = $this->mockAuthorRepository();
+        $this->mockPublicationRepository();
+        $this->mockAffiliationRepository();
+
+        $authorRepoMock->shouldReceive('add')->andReturnUsing(function ($author) use (&$capturedAuthor) {
+            $capturedAuthor = $author;
+            return 1;
+        });
+
+        $publication = new Publication();
+        $publication->setId(1);
+
+        $data = (object) [
+            'authors' => 'E.M.,Joyce,,,"Faculty of Biology, Ludwig-Maximilians-Universität München,80638 Germany|Australian Tropical Herbarium,James Cook University,Cairns 4870,Queensland,Australia|College of Science and Engineering,James Cook University,Cairns 4870,Queensland,Australia|Centre for Tropical Environmental Sustainability Science,James Cook University,Cairns 4870,Queensland,Australia"',
+            'locale' => 'en',
+        ];
+
+        AuthorsProcessor::process($data, 'contact@example.com', 1, $publication, 1);
+
+        $names = array_map(
+            fn (Affiliation $affiliation) => $affiliation->getName('en'),
+            $capturedAuthor->getAffiliations()
+        );
+
+        $this->assertSame([
+            'Faculty of Biology, Ludwig-Maximilians-Universität München,80638 Germany',
+            'Australian Tropical Herbarium,James Cook University,Cairns 4870,Queensland,Australia',
+            'College of Science and Engineering,James Cook University,Cairns 4870,Queensland,Australia',
+            'Centre for Tropical Environmental Sustainability Science,James Cook University,Cairns 4870,Queensland,Australia',
+        ], $names);
     }
 
     public function testUpdateAuthorFromCsvSetsBiography(): void
@@ -729,5 +765,28 @@ class AuthorsProcessorTest extends BaseTestCase
 
         // The existing affiliation should be updated with the new locale
         $this->assertEquals('New University', $existingAffiliation->getName('pt_BR'));
+        $this->assertCount(1, $author->getAffiliations());
+    }
+
+    public function testUpdateAuthorFromCsvFillsEachExistingAffiliationByPosition(): void
+    {
+        $this->mockAffiliationRepository();
+        $method = $this->getUpdateAuthorFromCsvMethod();
+
+        $author = new Author();
+        $first = new Affiliation();
+        $first->setName('Old University', 'en');
+        $second = new Affiliation();
+        $second->setName('Old Institute', 'en');
+        $author->addAffiliation($first);
+        $author->addAffiliation($second);
+
+        $method->invoke(null, $author, 'E.M.', 'Joyce', '', 'Universidade Nova|Instituto Novo|Terceiro Centro', '', 'pt_BR', true);
+
+        $this->assertEquals('Universidade Nova', $first->getName('pt_BR'));
+        $this->assertEquals('Instituto Novo', $second->getName('pt_BR'));
+        $affiliations = array_values($author->getAffiliations());
+        $this->assertCount(3, $affiliations);
+        $this->assertEquals('Terceiro Centro', $affiliations[2]->getName('pt_BR'));
     }
 }

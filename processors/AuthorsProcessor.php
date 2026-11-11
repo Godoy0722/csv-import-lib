@@ -275,6 +275,7 @@ class AuthorsProcessor
     /**
      * Parse one author entry: Given,Family,Email,ORCID,Affiliation,Biography.
      * Commas inside quotes stay in that field.
+     * Several affiliations in that field are separated by `|`.
      */
     public static function parseAuthorString(string $authorString, string $contactEmail): array
     {
@@ -355,24 +356,40 @@ class AuthorsProcessor
             $author->setOrcidVerified(true);
         }
 
-        if ($affiliation) {
-            $existingAffiliations = $author->getAffiliations();
-            if (!empty($existingAffiliations)) {
-                $firstAffiliation = reset($existingAffiliations);
-                if ($firstAffiliation) {
-                    $firstAffiliation->setName((string) $affiliation, $locale);
-                }
-            } else {
-                $affiliationEntity = Repo::affiliation()->newDataObject();
-                $affiliationEntity->setName((string) $affiliation, $locale);
-                $author->addAffiliation($affiliationEntity);
-            }
-        }
+        static::applyAffiliations($author, $affiliation, $locale);
 
         if (!empty($biography)) {
             $author->setBiography($biography, $locale);
         }
 
         $author->setIncludeInBrowse(true);
+    }
+
+    /**
+     * Store one affiliation, or several separated by `|`, the same divider funders use for awards.
+     * A later locale fills the affiliation at the same position and adds any new ones.
+     */
+    private static function applyAffiliations(object $author, string $affiliation, string $locale): void
+    {
+        $names = [];
+        foreach (array_map('trim', explode('|', $affiliation)) as $name) {
+            if ($name === '') {
+                continue;
+            }
+            $names[] = $name;
+        }
+
+        $existingAffiliations = array_values($author->getAffiliations());
+
+        foreach ($names as $index => $name) {
+            if (isset($existingAffiliations[$index])) {
+                $existingAffiliations[$index]->setName($name, $locale);
+                continue;
+            }
+
+            $affiliationEntity = Repo::affiliation()->newDataObject();
+            $affiliationEntity->setName($name, $locale);
+            $author->addAffiliation($affiliationEntity);
+        }
     }
 }
