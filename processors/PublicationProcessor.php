@@ -45,7 +45,7 @@ class PublicationProcessor
 
     /**
      * Set shared publication data (copyright, license, DOI, references) after submission creation.
-     * Subclasses call parent::process() then add app-specific fields (subtitle, abstract, prefix).
+     * Subclasses call parent::process() then add app-specific fields (subtitle, abstract).
      */
     public static function processCommons(Submission $submission, object $data, Context $context, string $sourceDir): Publication
     {
