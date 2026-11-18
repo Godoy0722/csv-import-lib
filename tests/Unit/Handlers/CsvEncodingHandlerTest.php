@@ -91,6 +91,85 @@ class CsvEncodingHandlerTest extends BaseTestCase
         $this->assertStringContainsString('Café', file_get_contents($path));
     }
 
+    public function testLeavesUtf8NamesWithDiacriticsUnchanged(): void
+    {
+        $path = $this->tempDir . '/utf8-names.csv';
+        $original = "firstname,lastname\nGarcía,Müller\n";
+        file_put_contents($path, $original);
+
+        $result = CsvEncodingHandler::ensureUtf8File($path);
+
+        $this->assertFalse($result['converted']);
+        $this->assertNull($result['sourceEncoding']);
+        $this->assertSame($original, file_get_contents($path));
+    }
+
+    public function testConvertsMacintoshNamesInsteadOfReadingThemAsWindows1252(): void
+    {
+        $path = $this->tempDir . '/mac-roman-names.csv';
+        file_put_contents($path, "firstname,lastname\n" . $this->macintosh('García,Müller') . "\n");
+
+        $result = CsvEncodingHandler::ensureUtf8File($path);
+
+        $converted = file_get_contents($path);
+        $this->assertTrue($result['converted']);
+        $this->assertSame('Macintosh', $result['sourceEncoding']);
+        $this->assertStringContainsString('García', $converted);
+        $this->assertStringContainsString('Müller', $converted);
+        $this->assertStringNotContainsString('Garc’a', $converted);
+        $this->assertStringNotContainsString('MŸller', $converted);
+    }
+
+    public function testConvertsOtherMacintoshLatinLetters(): void
+    {
+        $path = $this->tempDir . '/mac-roman-more.csv';
+        file_put_contents($path, $this->macintosh("José,François,Éric,Raúl,Schön\n"));
+
+        $result = CsvEncodingHandler::ensureUtf8File($path);
+
+        $converted = file_get_contents($path);
+        $this->assertSame('Macintosh', $result['sourceEncoding']);
+        $this->assertStringContainsString('José', $converted);
+        $this->assertStringContainsString('François', $converted);
+        $this->assertStringContainsString('Éric', $converted);
+        $this->assertStringContainsString('Raúl', $converted);
+        $this->assertStringContainsString('Schön', $converted);
+    }
+
+    public function testConvertsWindows1252Latin1NamesWithoutTreatingThemAsMacintosh(): void
+    {
+        $path = $this->tempDir . '/windows-1252-names.csv';
+        file_put_contents($path, "firstname,lastname\n" . $this->windows1252('García,Müller') . "\n");
+
+        $result = CsvEncodingHandler::ensureUtf8File($path);
+
+        $converted = file_get_contents($path);
+        $this->assertTrue($result['converted']);
+        $this->assertSame('Windows-1252', $result['sourceEncoding']);
+        $this->assertStringContainsString('García', $converted);
+        $this->assertStringContainsString('Müller', $converted);
+    }
+
+    public function testLeavesWindows1252PunctuationAndCentralEuropeanLetters(): void
+    {
+        $path = $this->tempDir . '/windows-1252-punctuation.csv';
+        $original = "O’Brien,it’s,l’amour,quelqu’un,aujourd’hui,Žižek,Škoda,kaše\n";
+        file_put_contents($path, $this->windows1252($original));
+
+        $result = CsvEncodingHandler::ensureUtf8File($path);
+
+        $converted = file_get_contents($path);
+        $this->assertSame('Windows-1252', $result['sourceEncoding']);
+        $this->assertStringContainsString('O’Brien', $converted);
+        $this->assertStringContainsString('it’s', $converted);
+        $this->assertStringContainsString('l’amour', $converted);
+        $this->assertStringContainsString('quelqu’un', $converted);
+        $this->assertStringContainsString('aujourd’hui', $converted);
+        $this->assertStringContainsString('Žižek', $converted);
+        $this->assertStringContainsString('Škoda', $converted);
+        $this->assertStringContainsString('kaše', $converted);
+    }
+
     public function testConvertsInvalidUtf8ByteSequence(): void
     {
         $path = $this->tempDir . '/invalid-seq.csv';
@@ -124,5 +203,21 @@ class CsvEncodingHandlerTest extends BaseTestCase
 
         $this->expectException(CsvEncodingException::class);
         CsvEncodingHandler::ensureUtf8File($path);
+    }
+
+    private function macintosh(string $utf8): string
+    {
+        $converted = iconv('UTF-8', 'MACINTOSH', $utf8);
+        $this->assertNotFalse($converted);
+
+        return $converted;
+    }
+
+    private function windows1252(string $utf8): string
+    {
+        $converted = iconv('UTF-8', 'Windows-1252', $utf8);
+        $this->assertNotFalse($converted);
+
+        return $converted;
     }
 }
