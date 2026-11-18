@@ -88,11 +88,14 @@ class SubmissionStatusValidationTest extends BaseTestCase
         try {
             SharedInvalidRowValidations::validateRowHasAllRequiredFieldsCommons(
                 $row,
-                fn ($candidate) => RequiredIssueHeaders::validateRowHasAllRequiredFields($candidate, [])
+                fn ($candidate) => RequiredIssueHeaders::missingRequiredFields($candidate, [])
             );
             $this->fail('Expected a required-field failure');
         } catch (RowValidationException $exception) {
-            $this->assertSame(__('plugins.importexport.csv.verifyRequiredFieldsForThisRow'), $exception->getMessage());
+            $this->assertSame(
+                __('plugins.importexport.csv.verifyRequiredFieldsForThisRow', ['fields' => 'datePublished']),
+                $exception->getMessage()
+            );
         }
     }
 
@@ -131,7 +134,13 @@ class SubmissionStatusValidationTest extends BaseTestCase
             SharedInvalidRowValidations::validateRowContainAllFields(array_fill(0, $expected - 1, ''), $expected);
             $this->fail('Expected a short row');
         } catch (RowValidationException $exception) {
-            $this->assertSame(__('plugins.importexport.csv.rowDoesntContainAllFields'), $exception->getMessage());
+            $this->assertSame(
+                __('plugins.importexport.csv.rowDoesntContainAllFields', [
+                    'count' => $expected - 1,
+                    'expected' => $expected,
+                ]),
+                $exception->getMessage()
+            );
             $this->assertStringNotContainsString('dryModeCurrentIssue', $exception->getMessage());
         }
 
@@ -139,7 +148,13 @@ class SubmissionStatusValidationTest extends BaseTestCase
             SharedInvalidRowValidations::validateRowContainAllFields(array_fill(0, $expected + 1, ''), $expected);
             $this->fail('Expected a long row');
         } catch (RowValidationException $exception) {
-            $this->assertSame(__('plugins.importexport.csv.rowContainsTooManyFields'), $exception->getMessage());
+            $this->assertSame(
+                __('plugins.importexport.csv.rowContainsTooManyFields', [
+                    'count' => $expected + 1,
+                    'expected' => $expected,
+                ]),
+                $exception->getMessage()
+            );
         }
     }
 
@@ -159,7 +174,7 @@ class SubmissionStatusValidationTest extends BaseTestCase
                 $this->fail('Expected a missing file');
             } catch (RowValidationException $exception) {
                 $this->assertSame(
-                    __('plugins.importexport.csv.invalidGalleyFile', ['filename' => 'missing.pdf']),
+                    __('plugins.importexport.csv.invalidSubmissionFile', ['filename' => 'missing.pdf']),
                     $exception->getMessage()
                 );
             }

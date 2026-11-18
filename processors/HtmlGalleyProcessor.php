@@ -87,7 +87,10 @@ class HtmlGalleyProcessor
                     }
                 }
                 throw new RowValidationException(
-                    __('plugins.importexport.csv.errorWhileSavingHtmlDependentFile', ['filename' => $dependentFile])
+                    __('plugins.importexport.csv.errorWhileSavingHtmlDependentFile', [
+                        'filename' => $dependentFile,
+                        'message' => $e->getMessage(),
+                    ])
                 );
             }
 

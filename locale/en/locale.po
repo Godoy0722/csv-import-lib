@@ -21,40 +21,43 @@ msgid "plugin.importexport.csv.shared.erroWhileSavingCoverImage"
 msgstr "An error occurred while copying the cover image."
 
 msgid "plugins.importexport.csv.rowDoesntContainAllFields"
-msgstr "Row doesn't contain all fields."
+msgstr "This row has {$count} fields. {$expected} fields are required."
 
 msgid "plugins.importexport.csv.rowContainsTooManyFields"
-msgstr "Row contains more fields than expected."
+msgstr "This row has {$count} fields. Only {$expected} fields are allowed."
 
 msgid "plugins.importexport.csv.verifyRequiredFieldsForThisRow"
-msgstr "Verify the required fields for this row."
+msgstr "The following required fields are empty: {$fields}."
 
 msgid "plugins.importexport.csv.invalidCoverImage"
-msgstr "The cover image has an invalid format for this row."
+msgstr "Cover image \"{$filename}\" is missing or cannot be read."
 
 msgid "plugins.importexport.csv.invalidFileExtension"
-msgstr "The cover image has an invalid extension."
+msgstr "Cover image \"{$filename}\" has the extension \"{$extension}\". Allowed extensions: gif, jpg, png, webp."
 
 msgid "plugins.importexport.csv.invalidNumberOfLabelsAndGalleys"
-msgstr "Galley files don't have the same amount as the labels. Please verify it for this row."
+msgstr "galleyFilenames has {$fileCount} files, but galleyLabels has {$labelCount} labels."
 
 msgid "plugins.importexport.csv.invalidNumberOfLocalesAndGalleys"
-msgstr "Galley files don't have the same amount as the locales. Please verify it for this row."
+msgstr "galleyFilenames has {$fileCount} files, but galleyLocales has {$localeCount} locales."
 
 msgid "plugins.importexport.csv.invalidNumberOfLocalesAndHtmlGalleys"
-msgstr "The HTML galley accepts a single locale. Please verify it for this row."
+msgstr "htmlGalleyLocale must contain one locale, but {$count} were found."
 
 msgid "plugins.importexport.csv.invalidGalleyFile"
 msgstr "Missing galley file \"{$filename}\" for this submission."
 
+msgid "plugins.importexport.csv.invalidSubmissionFile"
+msgstr "Missing submission file \"{$filename}\" for this submission."
+
 msgid "plugins.importexport.csv.invalidNumberOfLabelsAndSupplementaryFiles"
-msgstr "Supplementary files don't have the same amount as the labels. Please verify it for this row."
+msgstr "suppFilenames has {$fileCount} files, but suppLabels has {$labelCount} labels."
 
 msgid "plugins.importexport.csv.invalidSupplementaryFile"
-msgstr "Invalid supplementary file \"{$filename}\" for this submission."
+msgstr "Supplementary file \"{$filename}\" is missing or cannot be read."
 
 msgid "plugins.importexport.csv.invalidNumberOfDescriptionsAndSupplementaryFiles"
-msgstr "Supplementary files don't have the same amount as the descriptions. Please verify it for this row."
+msgstr "suppDescriptions has {$descriptionCount} entries, but there are {$fileCount} supplementary files."
 
 msgid "plugins.importexport.csv.unknownContext"
 msgstr "Unknown {$context} with path \"{$contextPath}\"."
@@ -69,7 +72,7 @@ msgid "plugins.importexport.csv.noAuthorGroup"
 msgstr "There is no default author group in the {$context} {$contextPath}."
 
 msgid "plugins.importexport.csv.roleDoesntExist"
-msgstr "Role \"{$role}\" doesn't exist."
+msgstr "Role \"{$role}\" does not match a user group in this journal's primary locale."
 
 msgid "plugins.importexport.csv.versionRequiredWhenIdentifierProvided"
 msgstr "Version is required when versionIdentifier is provided."
@@ -111,7 +114,7 @@ msgid "plugins.importexport.csv.invalidAuthorEmail"
 msgstr "Invalid email \"{$email}\" for author {$authorIndex} (\"{$authorName}\") in the authors column. The third value of each author must be a valid email, or empty to use the journal contact email."
 
 msgid "plugins.importexport.csv.errorWhileCreatingPublication"
-msgstr "Error while creating publication."
+msgstr "The publication could not be created for this row."
 
 msgid "plugins.importexport.csv.invalidSubmissionViews"
 msgstr "The {$fieldName} field must be empty or a non-negative integer."
@@ -318,11 +321,11 @@ msgid "plugins.importexport.csv.invalidHtmlGalleyFile"
 msgstr "Missing HTML galley file \"{$filename}\" for this submission."
 
 msgid "plugins.importexport.csv.errorWhileSavingHtmlGalley"
-msgstr "An error occurred while saving the HTML galley file \"{$filename}\"."
+msgstr "An error occurred while saving the HTML galley file \"{$filename}\": {$message}."
 
 msgid "plugins.importexport.csv.errorWhileSavingHtmlDependentFile"
-msgstr "An error occurred while saving the HTML galley dependent file \"{$filename}\"."
+msgstr "An error occurred while saving the HTML galley dependent file \"{$filename}\": {$message}."
 
 msgid "plugins.importexport.csv.errorWhileSanitizingHtmlGalley"
-msgstr "An error occurred while sanitizing the HTML galley file \"{$filename}\"."
+msgstr "The HTML galley file \"{$filename}\" could not be read."
 
