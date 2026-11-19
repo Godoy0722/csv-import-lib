@@ -85,6 +85,14 @@ class FundersProcessorTest extends BaseTestCase
 
     // ==================== FunderDAO Helpers ====================
 
+    /** The funding plugin is optional; its classes exist only where it is installed. */
+    private function skipUnlessFundingPluginInstalled(): void
+    {
+        if (!class_exists(Funder::class)) {
+            $this->markTestSkipped('The funding plugin is not installed in this app.');
+        }
+    }
+
     private function setFunderDao(object $dao): void
     {
         $ref = new \ReflectionClass(FundersProcessor::class);
@@ -116,6 +124,8 @@ class FundersProcessorTest extends BaseTestCase
 
     private function createMockFunderDao(): Mockery\MockInterface
     {
+        $this->skipUnlessFundingPluginInstalled();
+
         $mock = Mockery::mock(FunderDAO::class);
         $mock->shouldReceive('newDataObject')->andReturnUsing(fn() => new Funder());
         $mock->shouldReceive('insertObject')->andReturn(1)->byDefault();
@@ -128,6 +138,8 @@ class FundersProcessorTest extends BaseTestCase
 
     private function createMockFunderAwardDao(): Mockery\MockInterface
     {
+        $this->skipUnlessFundingPluginInstalled();
+
         $mock = Mockery::mock(FunderAwardDAO::class);
         $mock->shouldReceive('newDataObject')->andReturnUsing(fn() => new FunderAward());
         $mock->shouldReceive('insertObject')->andReturn(1)->byDefault();
@@ -337,6 +349,8 @@ class FundersProcessorTest extends BaseTestCase
 
     public function testProcessReturnsEarlyWhenSubmissionHasFunders(): void
     {
+        $this->skipUnlessFundingPluginInstalled();
+
         $this->registerMockFundingPlugin(true);
 
         $existingFunder = new Funder();
@@ -502,6 +516,8 @@ class FundersProcessorTest extends BaseTestCase
 
     public function testProcessClonesFundersFromBaseSubmission(): void
     {
+        $this->skipUnlessFundingPluginInstalled();
+
         $this->registerMockFundingPlugin(true);
 
         $baseFunder = new Funder();
@@ -620,6 +636,8 @@ class FundersProcessorTest extends BaseTestCase
 
     public function testProcessMultiLocaleReturnsEarlyWhenSubmissionHasFunders(): void
     {
+        $this->skipUnlessFundingPluginInstalled();
+
         $this->registerMockFundingPlugin(true);
 
         $existingFunder = new Funder();

@@ -25,7 +25,6 @@ use PKP\context\Context;
 use PKP\affiliation\Affiliation;
 use PKP\affiliation\Repository as AffiliationRepository;
 use PKP\author\DAO as AuthorDAO;
-use PKP\author\Repository as AuthorRepository;
 use PKP\category\Category;
 use PKP\category\DAO as CategoryDAO;
 use PKP\category\Repository as CategoryRepository;
@@ -148,20 +147,39 @@ abstract class BaseTestCase extends PKPTestCase
 
     // ==================== Repository Mock Helpers ====================
 
+    /**
+     * The repository class the app's Repo facade resolves for this method.
+     * An app can bind its own subclass of the PKP repository (OMP does it for authors).
+     */
+    protected function repositoryClassOf(string $facadeMethod): string
+    {
+        return (new \ReflectionMethod(\APP\facades\Repo::class, $facadeMethod))->getReturnType()->getName();
+    }
+
+    /** Skips the test in apps whose Repo facade has no such repository (OMP and OPS have no galleys). */
+    protected function skipUnlessRepoHas(string $facadeMethod): void
+    {
+        if (!method_exists(\APP\facades\Repo::class, $facadeMethod)) {
+            $this->markTestSkipped("This app has no Repo::{$facadeMethod}().");
+        }
+    }
+
     protected function mockAuthorRepository(): MockInterface
     {
-        $this->backupContainerInstance(AuthorRepository::class);
+        // OMP binds its own APP\author\Repository, so mock the class the app's Repo::author() resolves.
+        $authorRepoClass = $this->repositoryClassOf('author');
+        $this->backupContainerInstance($authorRepoClass);
 
         $authorDaoMock = Mockery::mock(AuthorDAO::class)->makePartial();
         $authorDaoMock->shouldReceive('update')->andReturn(true);
 
-        $mock = Mockery::mock(AuthorRepository::class)->makePartial();
+        $mock = Mockery::mock($authorRepoClass)->makePartial();
         $mock->shouldReceive('newDataObject')->andReturnUsing(fn() => new Author());
         $mock->shouldReceive('add')->andReturn(1)->byDefault();
         $mock->shouldReceive('edit')->andReturn(true);
         $mock->dao = $authorDaoMock;
 
-        app()->instance(AuthorRepository::class, $mock);
+        app()->instance($authorRepoClass, $mock);
         return $mock;
     }
 
@@ -256,6 +274,8 @@ abstract class BaseTestCase extends PKPTestCase
 
     protected function mockGalleyRepository(): MockInterface
     {
+        $this->skipUnlessRepoHas('galley');
+
         $this->backupContainerInstance(GalleyRepository::class);
 
         $galleyDaoMock = Mockery::mock(GalleyDAO::class)->makePartial();
@@ -478,6 +498,10 @@ abstract class BaseTestCase extends PKPTestCase
 
     protected function createMockSection(array $data = []): Section
     {
+        if (!method_exists(Section::class, 'setAbbrev')) {
+            $this->markTestSkipped('This app\'s sections have no abbreviation (OMP series use a path).');
+        }
+
         $section = new Section();
         $section->setId($data['id'] ?? 1);
         $section->setContextId($data['contextId'] ?? 1);

@@ -237,6 +237,7 @@ class GalleyProcessorTest extends BaseTestCase
      */
     public function testProcessDoesNotCopyRowDoiOntoGalley(): void
     {
+        $this->skipUnlessRepoHas('galley');
         $this->backupContainerInstance(GalleyRepository::class);
 
         $capturedGalley = null;

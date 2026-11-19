@@ -72,7 +72,7 @@ msgid "plugins.importexport.csv.noAuthorGroup"
 msgstr "There is no default author group in the {$context} {$contextPath}."
 
 msgid "plugins.importexport.csv.roleDoesntExist"
-msgstr "Role \"{$role}\" does not match a user group in this journal's primary locale."
+msgstr "Role \"{$role}\" does not match a user group in this {$context}'s primary locale."
 
 msgid "plugins.importexport.csv.versionRequiredWhenIdentifierProvided"
 msgstr "Version is required when versionIdentifier is provided."
@@ -111,7 +111,7 @@ msgid "plugins.importexport.csv.userAlreadyExistsWithEmail"
 msgstr "User already exists with email \"{$email}\"."
 
 msgid "plugins.importexport.csv.invalidAuthorEmail"
-msgstr "Invalid email \"{$email}\" for author {$authorIndex} (\"{$authorName}\") in the authors column. The third value of each author must be a valid email, or empty to use the journal contact email."
+msgstr "Invalid email \"{$email}\" for author {$authorIndex} (\"{$authorName}\") in the authors column. The third value of each author must be a valid email, or empty to use the {$context} contact email."
 
 msgid "plugins.importexport.csv.errorWhileCreatingPublication"
 msgstr "The publication could not be created for this row."
@@ -329,3 +329,11 @@ msgstr "An error occurred while saving the HTML galley dependent file \"{$filena
 msgid "plugins.importexport.csv.errorWhileSanitizingHtmlGalley"
 msgstr "The HTML galley file \"{$filename}\" could not be read."
 
+msgid "plugins.importexport.csv.invalidEmail"
+msgstr "Invalid email \"{$email}\"."
+
+msgid "plugins.importexport.csv.couldNotWriteFile"
+msgstr "Could not write to the file \"{$filename}\"."
+
+msgid "plugins.importexport.csv.invalidOrcidChecksum"
+msgstr "Invalid ORCID checksum for: \"{$orcid}\". Please verify the ORCID is correct."

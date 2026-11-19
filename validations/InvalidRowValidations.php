@@ -106,6 +106,7 @@ class InvalidRowValidations
                     'email' => $capturedEmail,
                     'authorName' => $authorName !== '' ? $authorName : (string) ($index + 1),
                     'authorIndex' => $index + 1,
+                    'context' => __('context.context'),
                 ]));
             }
         }
@@ -446,7 +447,10 @@ class InvalidRowValidations
             );
 
             if (count($matchingGroups) === 0) {
-                throw new RowValidationException(__('plugins.importexport.csv.roleDoesntExist', ['role' => $role]));
+                throw new RowValidationException(__('plugins.importexport.csv.roleDoesntExist', [
+                    'role' => $role,
+                    'context' => __('context.context'),
+                ]));
             }
         }
     }
