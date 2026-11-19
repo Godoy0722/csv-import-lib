@@ -47,6 +47,9 @@ msgstr "htmlGalleyLocale must contain one locale, but {$count} were found."
 msgid "plugins.importexport.csv.invalidGalleyFile"
 msgstr "Missing galley file \"{$filename}\" for this submission."
 
+msgid "plugins.importexport.csv.invalidSubmissionStatus"
+msgstr "Unknown submission status. Use published, queued, or scheduled. Leave the cell empty to publish the submission."
+
 msgid "plugins.importexport.csv.invalidSubmissionFile"
 msgstr "Missing submission file \"{$filename}\" for this submission."
 
