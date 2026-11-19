@@ -189,31 +189,6 @@ class GalleyProcessorTest extends BaseTestCase
         $this->assertEquals(1, $galleyId);
     }
 
-    public function testProcessWithDoi(): void
-    {
-        // setStoredPubId requires publication context, so we mock the Galley
-        $this->backupContainerInstance(GalleyRepository::class);
-
-        $galleyDaoMock = Mockery::mock(GalleyDAO::class)->makePartial();
-        $galleyDaoMock->shouldReceive('insert')->andReturn(1);
-
-        $galleyRepoMock = Mockery::mock(GalleyRepository::class)->makePartial();
-        $galleyRepoMock->shouldReceive('newDataObject')->andReturnUsing(function () {
-            $galley = Mockery::mock(Galley::class)->makePartial();
-            $galley->shouldReceive('setStoredPubId')->andReturnNull();
-            return $galley;
-        });
-        $galleyRepoMock->shouldReceive('add')->andReturn(1);
-        $galleyRepoMock->dao = $galleyDaoMock;
-        app()->instance(GalleyRepository::class, $galleyRepoMock);
-
-        $data = (object) ['locale' => 'en', 'doi' => '10.1234/test'];
-
-        $galleyId = GalleyProcessor::process(10, $data, 'PDF', 1, 'pdf');
-
-        $this->assertEquals(1, $galleyId);
-    }
-
     public function testProcessWithEmptyDoi(): void
     {
         $this->mockGalleyRepository();
@@ -257,9 +232,11 @@ class GalleyProcessorTest extends BaseTestCase
         $this->assertEquals('PDF', $capturedGalley->getData('name', 'en'));
     }
 
-    public function testProcessSetsDoiOnGalley(): void
+    /**
+     * The row DOI belongs to the publication. The galley must not receive a copy of it.
+     */
+    public function testProcessDoesNotCopyRowDoiOntoGalley(): void
     {
-        // setStoredPubId requires publication context, so we mock the Galley
         $this->backupContainerInstance(GalleyRepository::class);
 
         $capturedGalley = null;
@@ -269,7 +246,7 @@ class GalleyProcessorTest extends BaseTestCase
         $galleyRepoMock = Mockery::mock(GalleyRepository::class)->makePartial();
         $galleyRepoMock->shouldReceive('newDataObject')->andReturnUsing(function () {
             $galley = Mockery::mock(Galley::class)->makePartial();
-            $galley->shouldReceive('setStoredPubId')->with('doi', '10.1234/galley-doi')->once()->andReturnNull();
+            $galley->shouldReceive('setStoredPubId')->never();
             return $galley;
         });
         $galleyRepoMock->shouldReceive('add')->andReturnUsing(function ($galley) use (&$capturedGalley) {
@@ -281,8 +258,9 @@ class GalleyProcessorTest extends BaseTestCase
 
         $data = (object) ['locale' => 'en', 'doi' => '10.1234/galley-doi'];
 
-        GalleyProcessor::process(10, $data, 'PDF', 1, 'pdf');
+        $galleyId = GalleyProcessor::process(10, $data, 'PDF', 1, 'pdf');
 
+        $this->assertSame(1, $galleyId);
         $this->assertNotNull($capturedGalley);
     }
 

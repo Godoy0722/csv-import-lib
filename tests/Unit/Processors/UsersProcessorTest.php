@@ -487,7 +487,11 @@ class UsersProcessorTest extends BaseTestCase
         $this->assertEquals('originaluser', $existingUser->getUsername());
     }
 
-    public function testUpdateSetsPasswordWhenProvided(): void
+    /**
+     * Only new users receive the temporary password. An update keeps the existing password
+     * and its must-change flag, even when the row fills tempPassword.
+     */
+    public function testUpdateNeverChangesPasswordEvenWhenProvided(): void
     {
         $this->beginDatabaseTransaction();
 
@@ -495,6 +499,8 @@ class UsersProcessorTest extends BaseTestCase
             ->withId(42)
             ->withUsername('testuser')
             ->build();
+        $originalPassword = $existingUser->getPassword();
+        $originalMustChangePassword = $existingUser->getMustChangePassword();
 
         $userRepoMock = $this->mockUserRepository();
         $userRepoMock->shouldReceive('edit')->once()->andReturn(true);
@@ -508,8 +514,8 @@ class UsersProcessorTest extends BaseTestCase
 
         $this->rollbackDatabaseTransaction();
 
-        $this->assertTrue(password_verify('newpassword123', $existingUser->getPassword()));
-        $this->assertTrue($existingUser->getMustChangePassword());
+        $this->assertSame($originalPassword, $existingUser->getPassword());
+        $this->assertSame($originalMustChangePassword, $existingUser->getMustChangePassword());
     }
 
     public function testUpdateSkipsPasswordWhenEmpty(): void
