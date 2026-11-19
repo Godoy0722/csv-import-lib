@@ -819,10 +819,11 @@ class InvalidRowValidations
      * @param string|null $doi The raw DOI from the CSV row
      * @param array<string,bool> $existingDois Preloaded DB DOIs keyed by normalized DOI
      * @param array<string,bool> $importedDois DOIs already imported in this run
+     * @param string|null $ownDoi DOI the row's own publication already has. An extra-locale row may repeat it.
      *
      * @throws RowValidationException
      */
-    public static function validateDoiNotDuplicate(?string $doi, array $existingDois, array $importedDois): void
+    public static function validateDoiNotDuplicate(?string $doi, array $existingDois, array $importedDois, ?string $ownDoi = null): void
     {
         if (empty(trim($doi ?? ''))) {
             return;
@@ -830,7 +831,7 @@ class InvalidRowValidations
 
         $normalized = static::normalizeVorDoi($doi);
 
-        if ($normalized === null) {
+        if ($normalized === null || $normalized === static::normalizeVorDoi($ownDoi)) {
             return;
         }
 

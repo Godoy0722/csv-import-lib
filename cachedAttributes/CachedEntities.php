@@ -178,7 +178,7 @@ class CachedEntities
 
         foreach (static::getSectionsForContext($contextId) as $section) {
             $titleMatches = $sectionTitle === '' || static::normalizeSectionTitle($section->getTitle($locale)) === $sectionTitle;
-            $abbrevMatches = $sectionAbbrev === '' || static::normalizeSectionAbbrev($section->getAbbrev($locale)) === $sectionAbbrev;
+            $abbrevMatches = $sectionAbbrev === '' || static::normalizeSectionAbbrev(static::sectionAbbrevOf($section, $locale)) === $sectionAbbrev;
 
             if ($titleMatches && $abbrevMatches) {
                 return $section;
@@ -222,7 +222,7 @@ class CachedEntities
      *
      * @return array<int,Section>
      */
-    private static function getSectionsForContext(int $contextId): array
+    protected static function getSectionsForContext(int $contextId): array
     {
         if (isset(static::$sectionsByContext[$contextId])) {
             return static::$sectionsByContext[$contextId];
@@ -242,6 +242,15 @@ class CachedEntities
         ksort(static::$sectionsByContext[$contextId]);
 
         return static::$sectionsByContext[$contextId];
+    }
+
+    /**
+     * The short identifier a CSV row may use for the section: the abbreviation in OJS and OPS.
+     * Apps whose sections have no abbreviation override it (OMP series use the path).
+     */
+    protected static function sectionAbbrevOf(Section $section, string $locale): string|array|null
+    {
+        return $section->getAbbrev($locale);
     }
 
     /** Titles are compared as stored, minus the surrounding whitespace the CSV may carry. */

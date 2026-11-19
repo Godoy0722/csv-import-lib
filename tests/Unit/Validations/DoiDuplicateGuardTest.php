@@ -209,7 +209,33 @@ class DoiDuplicateGuardTest extends BaseTestCase
         InvalidRowValidations::validateDoiNotDuplicate('10.5678/versioned-v2', $existingDois, $importedDois);
     }
 
-    // ==================== L1 (in-flight) vs L2 (database) precedence ====================
+    // ==================== Extra-locale rows repeating their publication's DOI ====================
+
+    /**
+     * An extra-locale row of a version already imported may repeat that version's DOI, in any notation.
+     */
+    public function testExtraLocaleRowRepeatingItsPublicationDoiPasses(): void
+    {
+        $existingDois = ['https://doi.org/10.1234/ml-book' => true];
+        $importedDois = ['https://doi.org/10.1234/ml-book' => true];
+
+        $this->expectNotToPerformAssertions();
+
+        InvalidRowValidations::validateDoiNotDuplicate('doi:10.1234/ml-book', $existingDois, $importedDois, '10.1234/ml-book');
+    }
+
+    /**
+     * The own DOI only excuses itself: another DOI already used is still a duplicate.
+     */
+    public function testExtraLocaleRowWithAnotherUsedDoiIsRejected(): void
+    {
+        $importedDois = ['https://doi.org/10.1234/other-book' => true];
+
+        $this->expectException(RowValidationException::class);
+        InvalidRowValidations::validateDoiNotDuplicate('10.1234/other-book', [], $importedDois, '10.1234/ml-book');
+    }
+
+        // ==================== L1 (in-flight) vs L2 (database) precedence ====================
 
     /**
      * L1 is checked before L2 — error message reflects the DOI that was caught.

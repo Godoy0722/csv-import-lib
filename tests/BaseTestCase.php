@@ -15,6 +15,7 @@
 namespace APP\plugins\importexport\csv\shared\tests;
 
 use APP\author\Author;
+use APP\facades\Repo;
 use APP\publication\Publication;
 use APP\section\Section;
 use APP\submission\Submission;
@@ -215,6 +216,70 @@ abstract class BaseTestCase extends PKPTestCase
 
         app()->instance(UserRepository::class, $mock);
         return $mock;
+    }
+
+    /** @var array<int,array> Publication data kept by mockStoringPublicationRepository(), keyed by publication ID */
+    protected array $storedPublications = [];
+
+    /**
+     * A publication repository that keeps what is saved, with the save semantics of PKP 3.5:
+     * - dao->update() replaces the stored settings with the object's, and rewrites only the vocabularies
+     *   (keywords, subjects, disciplines, supportingAgencies) the object holds, each one completely;
+     *   it also removes those vocabularies from the object it saves, as PKP's extractControlledVocab() does;
+     * - edit() saves the object's data merged with the params, then returns the stored publication;
+     * - get() returns a new object built from what is stored.
+     */
+    protected function mockStoringPublicationRepository(): MockInterface
+    {
+        $this->backupContainerInstance(PublicationRepository::class);
+        $this->storedPublications = [];
+        $vocabularies = array_flip(['keywords', 'subjects', 'disciplines', 'supportingAgencies']);
+
+        $get = function (int $id): ?Publication {
+            if (!isset($this->storedPublications[$id])) {
+                return null;
+            }
+            $publication = new Publication();
+            $publication->setAllData($this->storedPublications[$id]);
+            return $publication;
+        };
+
+        $dao = Mockery::mock(PublicationDAO::class)->makePartial();
+        $dao->shouldReceive('update')->andReturnUsing(function (Publication $publication) use ($vocabularies) {
+            $savedVocabularies = array_intersect_key($publication->_data, $vocabularies);
+            $publication->setAllData(array_diff_key($publication->_data, $vocabularies));
+
+            $storedVocabularies = array_intersect_key($this->storedPublications[$publication->getId()] ?? [], $vocabularies);
+            $this->storedPublications[$publication->getId()] = array_merge(
+                $publication->_data,
+                array_merge($storedVocabularies, $savedVocabularies)
+            );
+        });
+
+        $mock = Mockery::mock(PublicationRepository::class)->makePartial();
+        $mock->dao = $dao;
+        $mock->shouldReceive('newDataObject')->andReturnUsing(function (array $params = []) {
+            $publication = new Publication();
+            $publication->setAllData($params);
+            return $publication;
+        });
+        $mock->shouldReceive('get')->andReturnUsing(fn (int $id) => $get($id));
+        $mock->shouldReceive('edit')->andReturnUsing(function (Publication $publication, array $params) use ($dao, $get) {
+            $newPublication = new Publication();
+            $newPublication->setAllData(array_merge($publication->_data, $params));
+            $dao->update($newPublication, $publication);
+            return $get($newPublication->getId());
+        });
+
+        app()->instance(PublicationRepository::class, $mock);
+        return $mock;
+    }
+
+    /** Stores a publication as mockStoringPublicationRepository() keeps it, and returns it as get() would. */
+    protected function storePublication(int $id, array $data): Publication
+    {
+        $this->storedPublications[$id] = ['id' => $id] + $data;
+        return Repo::publication()->get($id);
     }
 
     protected function mockPublicationRepository(): MockInterface

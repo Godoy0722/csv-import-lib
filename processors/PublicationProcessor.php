@@ -266,7 +266,9 @@ class PublicationProcessor
 
         Repo::publication()->dao->update($publication);
 
-        return $publication;
+        // The DAO strips keywords, subjects and the other vocabularies from the object it saves.
+        // Reload it so the multi-locale processors that follow add their locale to the stored values instead of replacing them.
+        return Repo::publication()->get($publication->getId()) ?? $publication;
     }
 
     /** Read the contents of a references file from the source directory. */
@@ -314,6 +316,8 @@ class PublicationProcessor
         $existingAgencies[$data->locale] = $newAgencies;
 
         Repo::publication()->edit($publication, ['supportingAgencies' => $existingAgencies]);
+        // edit() saves every vocabulary the object holds, so keep it current for the next multi-locale step.
+        $publication->setData('supportingAgencies', $existingAgencies);
     }
 
     /**

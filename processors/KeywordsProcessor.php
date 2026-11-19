@@ -68,5 +68,7 @@ class KeywordsProcessor
         $existingKeywords[$data->locale] = array_values($newKeywords);
 
         Repo::publication()->edit($publication, ['keywords' => $existingKeywords]);
+        // edit() saves every vocabulary the object holds, so keep it current for the next multi-locale step.
+        $publication->setData('keywords', $existingKeywords);
     }
 }

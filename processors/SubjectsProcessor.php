@@ -70,5 +70,7 @@ class SubjectsProcessor
         $existingSubjects[$data->locale] = array_values($newSubjects);
 
         Repo::publication()->edit($publication, ['subjects' => $existingSubjects]);
+        // edit() saves every vocabulary the object holds, so keep it current for the next multi-locale step.
+        $publication->setData('subjects', $existingSubjects);
     }
 }

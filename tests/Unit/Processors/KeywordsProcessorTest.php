@@ -15,6 +15,7 @@
 namespace APP\plugins\importexport\csv\shared\tests\Unit\Processors;
 
 use APP\plugins\importexport\csv\shared\processors\KeywordsProcessor;
+use APP\plugins\importexport\csv\shared\processors\SubjectsProcessor;
 use APP\plugins\importexport\csv\shared\tests\BaseTestCase;
 use APP\plugins\importexport\csv\shared\tests\Fixtures\CsvTestDataBuilder;
 use APP\plugins\importexport\csv\shared\tests\Fixtures\MockFactory;
@@ -340,6 +341,35 @@ class KeywordsProcessorTest extends BaseTestCase
             'en' => ['machine learning', 'AI'],
             'pt_BR' => ['aprendizado de máquina', 'IA'],
         ], $editParams['keywords']);
+    }
+
+    /**
+     * edit() saves every vocabulary the publication holds. The next multi-locale step (subjects, agencies) edits the
+     * same object, so it must already carry the keywords just saved, or that step writes the old keywords back.
+     */
+    public function testProcessMultiLocaleKeepsThePublicationCurrentForTheNextStep(): void
+    {
+        $subjectEditParams = null;
+        $pubRepoMock = $this->mockPublicationRepository();
+        $pubRepoMock->shouldReceive('edit')->andReturnUsing(function ($pub, $params) use (&$subjectEditParams) {
+            if (isset($params['subjects'])) {
+                $subjectEditParams = array_merge($pub->_data, $params);
+            }
+            return $pub;
+        });
+
+        $publication = new Publication();
+        $publication->setId(1);
+        $publication->setData('keywords', ['en' => ['cities']]);
+        $publication->setData('subjects', ['en' => ['architecture']]);
+
+        $data = (object) ['keywords' => 'cidades', 'subjects' => 'arquitetura', 'locale' => 'pt_BR'];
+
+        KeywordsProcessor::processMultiLocale($data, $publication);
+        SubjectsProcessor::processMultiLocale($data, $publication);
+
+        $this->assertEquals(['en' => ['cities'], 'pt_BR' => ['cidades']], $subjectEditParams['keywords']);
+        $this->assertEquals(['en' => ['architecture'], 'pt_BR' => ['arquitetura']], $subjectEditParams['subjects']);
     }
 
     public function testProcessMultiLocaleReturnsEarlyWhenEmpty(): void
