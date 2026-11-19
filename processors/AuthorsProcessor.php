@@ -300,7 +300,7 @@ class AuthorsProcessor
      *
      * @return string[]
      */
-    private static function splitRespectingQuotes(string $input, string $delimiter, bool $stripQuotes = false): array
+    public static function splitRespectingQuotes(string $input, string $delimiter, bool $stripQuotes = false): array
     {
         $parts = [];
         $current = '';
